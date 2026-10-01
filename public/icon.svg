@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Icône provisoire : à remplacer par celle du design Figma -->
+  <rect width="512" height="512" rx="96" fill="#1a1027"/>
+  <circle cx="256" cy="256" r="170" fill="#ff5c8a"/>
+  <text x="256" y="256" font-size="200" text-anchor="middle" dominant-baseline="central">🍻</text>
+</svg>
