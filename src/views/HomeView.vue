@@ -35,7 +35,7 @@ const games: ShowcaseGame[] = [
     titleAccent: 'retardement',
     description:
       "Un timer caché tourne, le téléphone passe de main en main avec un défi à chaque tour (citer un pays, une marque…). Celui qui l'a quand elle explose perd !",
-    players: '3-12 Joueurs',
+    players: '2-12 Joueurs',
     cta: { label: 'Amorcer', icon: ctaBombe },
   },
   {
@@ -51,7 +51,7 @@ const games: ShowcaseGame[] = [
     titleAccent: 'du destin',
     description:
       "L'appli désigne un joueur au hasard avec une roulette animée sous tension. Qui sera l'élu du gage fatal ?",
-    players: '2-15 Joueurs',
+    players: '2-12 Joueurs',
     cta: { label: 'Tourner', icon: ctaRoulette },
   },
   {
@@ -66,15 +66,14 @@ const games: ShowcaseGame[] = [
     titleStart: 'Le jeu du',
     titleAccent: 'palmier',
     description:
-      'Tirez les cartes autour du palmier sans casser le cercle ! Règles officielles incluses avec toutes les valeurs de cartes.',
+      "Sortez un vrai jeu de cartes : l'appli vous donne la règle de chaque carte, de l'As au Roi.",
     chips: [
-      { label: 'As : Cul-sec', color: '#4ae176' },
-      { label: 'Roi : Coupe', color: '#c0c1ff' },
-      { label: 'Dame : Reine', color: '#ffb0cd' },
-      { label: 'Valet : Règle', color: '#c7c4d7' },
-      { label: '7 : Freeze', color: '#dae2fd' },
+      { label: 'As : Cul sec', color: '#4ae176' },
+      { label: 'Roi : Invente une règle', color: '#c0c1ff' },
+      { label: 'Dame : À la tienne', color: '#ffb0cd' },
+      { label: 'Valet : Le thème', color: '#c7c4d7' },
+      { label: '10 : Freeze', color: '#dae2fd' },
     ],
-    players: '3-10 Joueurs',
     cta: { label: 'Lancer', icon: ctaPalmier },
     withRules: true,
   },
@@ -91,7 +90,7 @@ const games: ShowcaseGame[] = [
     titleAccent: "l'aveugle",
     description:
       "Arrête le chrono pile au bon moment sans regarder l'écran ! Objectif défini aléatoirement à chaque manche (de 0.1 à 10.0 secondes).",
-    players: '2-10 Joueurs',
+    players: '2-12 Joueurs',
     cta: { label: 'Top départ', icon: ctaChrono },
   },
   {

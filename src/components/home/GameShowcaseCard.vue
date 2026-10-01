@@ -24,7 +24,8 @@ export interface ShowcaseGame {
   titleStart: string
   titleAccent: string
   description: string
-  players: string
+  /** Absent pour les jeux sans écran Joueurs (palmier) */
+  players?: string
   cta: { label: string; icon: string }
   chips?: ShowcaseChip[]
   withRules?: boolean
@@ -76,15 +77,15 @@ defineProps<{ game: ShowcaseGame }>()
       </div>
 
       <div class="game__footer">
-        <span class="players">
+        <span v-if="game.players" class="players">
           <img :src="iconPlayers" alt="" />
           {{ game.players }}
         </span>
         <div class="game__actions">
-          <button v-if="game.withRules" type="button" class="rules">
+          <RouterLink v-if="game.withRules" :to="{ name: game.routeName }" class="rules">
             <img :src="iconRules" alt="" />
             Règles
-          </button>
+          </RouterLink>
           <RouterLink :to="{ name: game.routeName }" class="cta">
             {{ game.cta.label }}
             <img :src="game.cta.icon" alt="" />
@@ -218,12 +219,13 @@ defineProps<{ game: ShowcaseGame }>()
 .game__chips {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 4px 0;
-  overflow-x: auto;
 }
 
 .game__chips span {
+  white-space: nowrap;
   padding: 2px 8px;
   border-radius: 16px;
   background: #222a3d;
@@ -258,6 +260,7 @@ defineProps<{ game: ShowcaseGame }>()
 
 .game__actions {
   display: flex;
+  margin-left: auto;
   align-items: center;
   gap: 8px;
 }

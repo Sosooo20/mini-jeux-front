@@ -26,7 +26,6 @@ const router = createRouter({
     {
       path: '/local',
       children: [
-        { path: '', name: 'local', component: () => import('../views/local/LocalHubView.vue') },
         {
           path: 'bombe',
           name: 'bombe',

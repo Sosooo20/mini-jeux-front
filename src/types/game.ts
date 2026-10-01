@@ -1,11 +1,7 @@
-export type GameMode = 'local' | 'online'
-
-export interface GameInfo {
-  id: string
+export interface LocalGame {
   name: string
-  emoji: string
-  description: string
-  mode: GameMode
-  routeName: string
+  /** Couleur du jeu (boutons, halo) et couleur du texte posé dessus */
+  accent: string
+  onAccent: string
   minPlayers: number
 }

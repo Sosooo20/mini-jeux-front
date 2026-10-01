@@ -1,70 +1,41 @@
-import type { GameInfo } from '@/types/game'
+import type { LocalGame } from '@/types/game'
 
-export const LOCAL_GAMES: GameInfo[] = [
-  {
-    id: 'bombe',
+export const MAX_PLAYERS = 12
+
+export const GAMES = {
+  roulette: {
+    name: 'Roulette du destin',
+    accent: '#c0c1ff',
+    onAccent: '#1000a9',
+    minPlayers: 2,
+  },
+  bombe: {
     name: 'Bombe à retardement',
-    emoji: '💣',
-    description: 'Fais passer le téléphone avant que ça pète !',
-    mode: 'local',
-    routeName: 'bombe',
+    accent: '#ffb4ab',
+    onAccent: '#690005',
     minPlayers: 2,
   },
-  {
-    id: 'roulette',
-    name: 'Roulette',
-    emoji: '🎯',
-    description: 'Le hasard désigne un joueur.',
-    mode: 'local',
-    routeName: 'roulette',
-    minPlayers: 2,
-  },
-  {
-    id: 'palmier',
+  palmier: {
     name: 'Jeu du palmier',
-    emoji: '🌴',
-    description: 'Tire une carte, applique la règle.',
-    mode: 'local',
-    routeName: 'palmier',
-    minPlayers: 2,
+    accent: '#4ae176',
+    onAccent: '#003915',
+    minPlayers: 0,
   },
-  {
-    id: 'chrono',
+  chrono: {
     name: "Chrono à l'aveugle",
-    emoji: '⏱️',
-    description: 'Arrête le chrono pile au bon moment… sans regarder.',
-    mode: 'local',
-    routeName: 'chrono',
+    accent: '#6bff8f',
+    onAccent: '#002109',
     minPlayers: 2,
   },
-  {
-    id: 'confessions',
+  confessions: {
     name: 'Confessions anonymes',
-    emoji: '🤫',
-    description: 'Qui a écrit ce secret ?',
-    mode: 'local',
-    routeName: 'confessions',
+    accent: '#f751a1',
+    onAccent: '#570032',
     minPlayers: 3,
   },
-]
+} satisfies Record<string, LocalGame>
 
-export const ONLINE_GAMES: GameInfo[] = [
-  {
-    id: 'susceptible',
-    name: 'Qui est le plus susceptible de… ?',
-    emoji: '👉',
-    description: 'Tout le monde vote, le plus désigné boit.',
-    mode: 'online',
-    routeName: 'susceptible',
-    minPlayers: 3,
-  },
-  {
-    id: 'quiz',
-    name: 'Quiz de potes',
-    emoji: '❓',
-    description: 'Qui connaît le mieux ses amis ?',
-    mode: 'online',
-    routeName: 'quiz',
-    minPlayers: 2,
-  },
-]
+/** Variables CSS à poser sur la page d'un jeu */
+export function accentStyle(game: LocalGame) {
+  return { '--accent': game.accent, '--on-accent': game.onAccent }
+}
