@@ -75,6 +75,19 @@ function stop() {
   attempts.value.push({ name: currentName.value, time })
   current.value++
   phase.value = current.value < names.value.length ? 'pass' : 'results'
+  swallowNextClick()
+}
+
+// Le chrono s'arrête au contact du doigt, mais le navigateur envoie aussi un « clic »
+// au relâchement : sans ça, il appuierait sur le bouton apparu sous le doigt
+// (« C'est moi », « Rejouer »…) et sauterait l'écran suivant.
+function swallowNextClick() {
+  const block = (e: Event) => {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  window.addEventListener('click', block, { capture: true, once: true })
+  setTimeout(() => window.removeEventListener('click', block, { capture: true }), 700)
 }
 
 // Si l'appli passe en arrière-plan pendant le chrono, l'essai est annulé
