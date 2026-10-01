@@ -10,7 +10,6 @@ export interface ShowcaseChip {
 
 export interface ShowcaseGame {
   routeName: string
-  image: string
   /** Couleur d'accent (badge, mot du titre, bouton) */
   accent: string
   /** Couleur du texte posé sur l'accent */
@@ -44,8 +43,6 @@ defineProps<{ game: ShowcaseGame }>()
       '--kicker': game.kickerColor ?? game.accent,
     }"
   >
-    <img class="game__bg" :src="game.image" alt="" />
-    <div class="game__gradient" />
     <div class="game__glow" />
 
     <div class="game__top">
@@ -105,31 +102,9 @@ defineProps<{ game: ShowcaseGame }>()
   display: flex;
   flex-direction: column;
   border-radius: 48px;
-  background: #131b2e;
+  background: #1d2741;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   isolation: isolate;
-}
-
-.game__bg {
-  position: absolute;
-  inset: -6px -9px;
-  width: calc(100% + 18px);
-  height: calc(100% + 12px);
-  object-fit: cover;
-  opacity: 0.3;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-.game__gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    #060e20 0%,
-    rgba(6, 14, 32, 0.8) 50%,
-    rgba(6, 14, 32, 0) 100%
-  );
 }
 
 .game__glow {

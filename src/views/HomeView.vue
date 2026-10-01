@@ -5,11 +5,6 @@ import GameShowcaseCard, { type ShowcaseGame } from '@/components/home/GameShowc
 // Désactivés tant qu'il n'y a pas de jeux en ligne (voir le template)
 // import iconBolt from '@/assets/home/icon-bolt.svg'
 // import iconJoin from '@/assets/home/icon-join.svg'
-import bgBombe from '@/assets/home/bg-bombe.jpg'
-import bgRoulette from '@/assets/home/bg-roulette.jpg'
-import bgPalmier from '@/assets/home/bg-palmier.jpg'
-import bgChrono from '@/assets/home/bg-chrono.jpg'
-import bgConfessions from '@/assets/home/bg-confessions.jpg'
 import tagBombe from '@/assets/home/tag-bombe.svg'
 import tagRoulette from '@/assets/home/tag-roulette.svg'
 import tagPalmier from '@/assets/home/tag-palmier.svg'
@@ -29,7 +24,6 @@ import ctaConfessions from '@/assets/home/cta-confessions.svg'
 const games: ShowcaseGame[] = [
   {
     routeName: 'bombe',
-    image: bgBombe,
     accent: '#ffb4ab',
     onAccent: '#690005',
     glow: 'rgba(255, 180, 171, 0.25)',
@@ -46,7 +40,6 @@ const games: ShowcaseGame[] = [
   },
   {
     routeName: 'roulette',
-    image: bgRoulette,
     accent: '#c0c1ff',
     onAccent: '#1000a9',
     glow: 'rgba(128, 131, 255, 0.3)',
@@ -63,7 +56,6 @@ const games: ShowcaseGame[] = [
   },
   {
     routeName: 'palmier',
-    image: bgPalmier,
     accent: '#4ae176',
     onAccent: '#003915',
     glow: 'rgba(74, 225, 118, 0.25)',
@@ -88,7 +80,6 @@ const games: ShowcaseGame[] = [
   },
   {
     routeName: 'chrono',
-    image: bgChrono,
     accent: '#6bff8f',
     onAccent: '#002109',
     glow: 'rgba(128, 131, 255, 0.2)',
@@ -105,7 +96,6 @@ const games: ShowcaseGame[] = [
   },
   {
     routeName: 'confessions',
-    image: bgConfessions,
     accent: '#f751a1',
     onAccent: '#570032',
     glow: 'rgba(247, 81, 161, 0.3)',

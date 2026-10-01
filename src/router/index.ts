@@ -2,36 +2,60 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import WelcomeView from '../views/WelcomeView.vue'
 import { useUserStore } from '@/stores/user'
+import { useNavigationStore } from '@/stores/navigation'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** Masque la barre de navigation du bas */
+    hideNav?: boolean
+    /** Nom du composant du jeu : sa partie est conservée pendant un passage par l'appareil photo */
+    game?: string
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/bienvenue', name: 'welcome', component: WelcomeView },
+    { path: '/bienvenue', name: 'welcome', component: WelcomeView, meta: { hideNav: true } },
     { path: '/', name: 'home', component: HomeView },
+    {
+      path: '/photo',
+      name: 'camera',
+      component: () => import('../views/CameraView.vue'),
+    },
     {
       path: '/local',
       children: [
         { path: '', name: 'local', component: () => import('../views/local/LocalHubView.vue') },
-        { path: 'bombe', name: 'bombe', component: () => import('../views/local/BombeView.vue') },
+        {
+          path: 'bombe',
+          name: 'bombe',
+          component: () => import('../views/local/BombeView.vue'),
+          meta: { game: 'BombeView' },
+        },
         {
           path: 'roulette',
           name: 'roulette',
           component: () => import('../views/local/RouletteView.vue'),
+          meta: { game: 'RouletteView' },
         },
         {
           path: 'palmier',
           name: 'palmier',
           component: () => import('../views/local/PalmierView.vue'),
+          meta: { game: 'PalmierView' },
         },
         {
           path: 'chrono',
           name: 'chrono',
           component: () => import('../views/local/ChronoView.vue'),
+          meta: { game: 'ChronoView' },
         },
         {
           path: 'confessions',
           name: 'confessions',
           component: () => import('../views/local/ConfessionsView.vue'),
+          meta: { game: 'ConfessionsView' },
         },
       ],
     },
@@ -44,6 +68,17 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (to.name !== 'welcome' && !useUserStore().hasPseudo) {
     return { name: 'welcome' }
+  }
+})
+
+// Suit la partie en cours : conservée pendant un détour par l'appareil photo,
+// abandonnée dès qu'on va ailleurs
+router.afterEach((to) => {
+  const navigation = useNavigationStore()
+  if (to.meta.game) {
+    navigation.activeGame = { path: to.fullPath, component: to.meta.game }
+  } else if (to.name !== 'camera') {
+    navigation.activeGame = null
   }
 })
 
