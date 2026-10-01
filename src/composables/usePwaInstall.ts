@@ -1,9 +1,29 @@
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
+
+// État partagé, écouté dès le chargement du module : `beforeinstallprompt` peut
+// arriver avant que le composant qui affiche le bouton soit monté.
+const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
+const isInstalled = ref(
+  window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true,
+)
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  deferredPrompt.value = e as BeforeInstallPromptEvent
+})
+
+window.addEventListener('appinstalled', () => {
+  isInstalled.value = true
+  deferredPrompt.value = null
+})
+
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
 
 /**
  * Bouton « Installer l'appli ».
@@ -11,25 +31,8 @@ interface BeforeInstallPromptEvent extends Event {
  * - iOS / Safari : pas d'API, il faut afficher la consigne « Partager → Sur l'écran d'accueil ».
  */
 export function usePwaInstall() {
-  const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
-  const isInstalled = ref(
-    window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true,
-  )
-
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
   const canPrompt = computed(() => deferredPrompt.value !== null)
   const showIosHint = computed(() => isIos && !isInstalled.value)
-
-  function onBeforeInstallPrompt(e: Event) {
-    e.preventDefault()
-    deferredPrompt.value = e as BeforeInstallPromptEvent
-  }
-
-  function onInstalled() {
-    isInstalled.value = true
-    deferredPrompt.value = null
-  }
 
   async function install() {
     if (!deferredPrompt.value) return
@@ -37,16 +40,6 @@ export function usePwaInstall() {
     await deferredPrompt.value.userChoice
     deferredPrompt.value = null
   }
-
-  onMounted(() => {
-    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
-    window.addEventListener('appinstalled', onInstalled)
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
-    window.removeEventListener('appinstalled', onInstalled)
-  })
 
   return { isInstalled, canPrompt, showIosHint, install }
 }

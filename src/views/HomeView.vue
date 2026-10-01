@@ -3,8 +3,9 @@ import AppHeader from '@/components/home/AppHeader.vue'
 import BottomNav from '@/components/home/BottomNav.vue'
 import GameShowcaseCard, { type ShowcaseGame } from '@/components/home/GameShowcaseCard.vue'
 
-import iconBolt from '@/assets/home/icon-bolt.svg'
-import iconJoin from '@/assets/home/icon-join.svg'
+// Désactivés tant qu'il n'y a pas de jeux en ligne (voir le template)
+// import iconBolt from '@/assets/home/icon-bolt.svg'
+// import iconJoin from '@/assets/home/icon-join.svg'
 import bgBombe from '@/assets/home/bg-bombe.jpg'
 import bgRoulette from '@/assets/home/bg-roulette.jpg'
 import bgPalmier from '@/assets/home/bg-palmier.jpg'
@@ -128,6 +129,7 @@ const games: ShowcaseGame[] = [
   <AppHeader />
 
   <main class="home">
+    <!-- Désactivé tant qu'il n'y a pas de jeux en ligne
     <section class="quick-actions">
       <div class="quick-actions__glow quick-actions__glow--violet" />
       <div class="quick-actions__glow quick-actions__glow--green" />
@@ -142,6 +144,7 @@ const games: ShowcaseGame[] = [
         </RouterLink>
       </div>
     </section>
+    -->
 
     <section class="games">
       <div class="games__head">
