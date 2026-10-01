@@ -31,15 +31,20 @@ useWakeLock(computed(() => phase.value !== 'setup'))
 
 const currentName = computed(() => names.value[current.value] ?? '')
 
+// Écarts comparés au centième, comme à l'écran : deux « 0,21 s » sont ex æquo
 const ranking = computed(() =>
   attempts.value
-    .map((a) => ({ ...a, gap: a.time - target.value }))
-    .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap)),
+    .map((a) => {
+      const gap = a.time - target.value
+      return { ...a, gap, distance: Math.round(Math.abs(gap) * 100) }
+    })
+    .sort((a, b) => b.distance - a.distance),
 )
 
+// Le plus loin de la cible boit ; en cas d'égalité, tous les ex æquo boivent
 const losers = computed(() => {
-  const worst = Math.abs(ranking.value[0]?.gap ?? 0)
-  return ranking.value.filter((r) => Math.abs(r.gap) === worst).map((r) => r.name)
+  const worst = ranking.value[0]?.distance ?? 0
+  return ranking.value.filter((r) => r.distance === worst).map((r) => r.name)
 })
 
 const format = (seconds: number) => seconds.toFixed(2).replace('.', ',')
@@ -70,7 +75,8 @@ function go() {
 
 function stop() {
   if (phase.value !== 'running') return
-  const time = (performance.now() - startedAt) / 1000
+  // Arrondi au centième : c'est la précision affichée et comparée
+  const time = Math.round((performance.now() - startedAt) / 10) / 100
   vibrate(60)
   attempts.value.push({ name: currentName.value, time })
   current.value++
@@ -118,15 +124,24 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisibil
       <p class="label">{{ currentName }}, arrête le chrono à</p>
       <p class="target">{{ format(target) }}<small> s</small></p>
       <p class="explain">
-        L'écran va devenir noir. Compte dans ta tête et appuie n'importe où pour arrêter.
+        Le temps sera caché. Compte dans ta tête et appuie sur le buzzer pour arrêter.
       </p>
       <p v-if="warning" class="warning">{{ warning }}</p>
       <button type="button" class="btn btn--big" @click="go">Top départ</button>
     </section>
 
-    <!-- Écran noir : on ne voit rien, on appuie n'importe où pour arrêter -->
+    <!-- Temps caché : un buzzer à frapper (tout l'écran réagit, pour ne pas rater l'appui) -->
     <div v-else-if="phase === 'running'" class="blind" @pointerdown.prevent="stop">
-      <p>Appuie pour arrêter</p>
+      <p class="label blind__name">{{ currentName }}</p>
+      <div class="buzzer" aria-hidden="true">
+        <span class="buzzer__cap">STOP</span>
+      </div>
+      <div class="dots" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <p class="blind__hint">Appuie pour arrêter le chrono</p>
     </div>
 
     <LoserScreen v-else :losers="losers" @replay="newRound" @players="phase = 'setup'">
@@ -189,18 +204,119 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisibil
   z-index: 50;
   inset: 0;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding-bottom: max(32px, env(safe-area-inset-bottom));
-  background: #000;
+  gap: 32px;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  background: radial-gradient(
+    circle at 50% 45%,
+    color-mix(in srgb, var(--accent) 14%, var(--bg)) 0%,
+    var(--bg-deep) 70%
+  );
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
   cursor: pointer;
+  animation: fade-in 0.2s ease-out;
 }
 
-.blind p {
+.blind__name {
   font-size: 13px;
-  color: #333;
+  color: var(--muted);
+}
+
+/* Gros buzzer vert, qui « respire » pour montrer que ça tourne */
+.buzzer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(64vw, 240px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #b8ffc9 0%, var(--accent) 35%, #00a845 100%);
+  box-shadow:
+    0 14px 0 #006b2c,
+    0 18px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent),
+    inset 0 -10px 20px rgba(0, 60, 20, 0.45);
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+.buzzer__cap {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  letter-spacing: 2px;
+  color: var(--on-accent);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 14px 0 #006b2c,
+      0 18px 40px rgba(0, 0, 0, 0.6),
+      0 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent),
+      inset 0 -10px 20px rgba(0, 60, 20, 0.45);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow:
+      0 14px 0 #006b2c,
+      0 18px 40px rgba(0, 0, 0, 0.6),
+      0 0 0 22px color-mix(in srgb, var(--accent) 8%, transparent),
+      inset 0 -10px 20px rgba(0, 60, 20, 0.45);
+  }
+}
+
+/* Trois points qui flottent, décalés : le temps passe sans être affiché */
+.dots {
+  display: flex;
+  gap: 14px;
+  height: 28px;
+  align-items: flex-end;
+}
+
+.dots span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: float 1.2s ease-in-out infinite;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-14px);
+    opacity: 1;
+  }
+}
+
+.blind__hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .ranking {
