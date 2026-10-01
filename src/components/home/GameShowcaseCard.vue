@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import iconClock from '@/assets/home/icon-clock.svg'
 import iconPlayers from '@/assets/home/icon-players.svg'
-
-export interface ShowcaseChip {
-  label: string
-  color: string
-}
 
 export interface ShowcaseGame {
   routeName: string
@@ -17,8 +11,6 @@ export interface ShowcaseGame {
   /** Couleur du sur-titre, parfois plus claire que l'accent */
   kickerColor?: string
   tag: { icon: string; label: string }
-  subtag: string
-  duration: string
   kicker: { icon: string; label: string }
   titleStart: string
   titleAccent: string
@@ -26,7 +18,6 @@ export interface ShowcaseGame {
   /** Absent pour les jeux sans écran Joueurs (palmier) */
   players?: string
   cta: { label: string; icon: string }
-  chips?: ShowcaseChip[]
 }
 
 defineProps<{ game: ShowcaseGame }>()
@@ -45,16 +36,9 @@ defineProps<{ game: ShowcaseGame }>()
     <div class="game__glow" />
 
     <div class="game__top">
-      <div class="game__tags">
-        <span class="pill pill--accent">
-          <img :src="game.tag.icon" alt="" />
-          {{ game.tag.label }}
-        </span>
-        <span class="pill pill--glass">{{ game.subtag }}</span>
-      </div>
-      <span class="pill pill--glass pill--strong">
-        <img :src="iconClock" alt="" />
-        {{ game.duration }}
+      <span class="pill pill--accent">
+        <img :src="game.tag.icon" alt="" />
+        {{ game.tag.label }}
       </span>
     </div>
 
@@ -67,12 +51,6 @@ defineProps<{ game: ShowcaseGame }>()
         {{ game.titleStart }} <span>{{ game.titleAccent }}</span>
       </h3>
       <p class="game__desc">{{ game.description }}</p>
-
-      <div v-if="game.chips" class="game__chips">
-        <span v-for="chip in game.chips" :key="chip.label" :style="{ color: chip.color }">
-          {{ chip.label }}
-        </span>
-      </div>
 
       <div class="game__footer">
         <span v-if="game.players" class="players">
@@ -126,12 +104,6 @@ defineProps<{ game: ShowcaseGame }>()
   padding: 16px 16px 0;
 }
 
-.game__tags {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .pill {
   display: inline-flex;
   align-items: center;
@@ -155,18 +127,6 @@ defineProps<{ game: ShowcaseGame }>()
   color: var(--on-accent);
   text-transform: uppercase;
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 30%, transparent));
-}
-
-.pill--glass {
-  background: rgba(45, 52, 73, 0.8);
-  backdrop-filter: blur(6px);
-  color: #c7c4d7;
-}
-
-.pill--strong {
-  padding: 2px 10px;
-  background: rgba(45, 52, 73, 0.9);
-  color: #dae2fd;
 }
 
 .game__body {
@@ -208,25 +168,6 @@ defineProps<{ game: ShowcaseGame }>()
   font-size: 12px;
   line-height: 19.5px;
   color: #c7c4d7;
-}
-
-.game__chips {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 4px 0;
-}
-
-.game__chips span {
-  white-space: nowrap;
-  padding: 2px 8px;
-  border-radius: 16px;
-  background: #222a3d;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 16px;
 }
 
 .game__footer {
