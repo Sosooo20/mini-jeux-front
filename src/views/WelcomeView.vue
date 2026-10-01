@@ -31,7 +31,6 @@ function submit() {
         id="pseudo"
         v-model="pseudo"
         :maxlength="PSEUDO_MAX_LENGTH"
-        placeholder="Ex. Marina"
         autocomplete="nickname"
         autocapitalize="words"
         enterkeyhint="go"
@@ -119,10 +118,6 @@ input {
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 18px;
-}
-
-input::placeholder {
-  color: #7d7a91;
 }
 
 input:focus {
