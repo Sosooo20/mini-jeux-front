@@ -11,7 +11,8 @@ import { playDing, unlockAudio } from '@/composables/useSound'
 
 const game = GAMES.roulette
 const SPIN_MS = 4500
-const COLORS = ['#c0c1ff', '#4ae176', '#ffb4ab', '#f751a1', '#6bff8f', '#ffd166']
+// Couleurs des jeux de l'accueil, en dégradé comme les cartes
+const COLORS = ['#c0c1ff', '#4ae176', '#ffb4ab', '#f751a1']
 
 const players = usePlayersStore()
 
@@ -21,12 +22,18 @@ const rotation = ref(0)
 const spinning = ref(false)
 const chosen = ref<string | null>(null)
 const excludeLast = ref(false)
+/** Dernier joueur désigné, exclu du tirage suivant si l'option est active */
+const lastPicked = ref<string | null>(null)
 let finishTimer: ReturnType<typeof setTimeout> | undefined
 let pendingWinner: string | null = null
 
 useWakeLock(computed(() => phase.value === 'play'))
 
 const step = computed(() => 360 / names.value.length)
+
+const excluded = computed(() =>
+  excludeLast.value && lastPicked.value && names.value.length > 2 ? lastPicked.value : null,
+)
 
 /** Point du bord de la roue à un angle donné (0° = en haut, sens horaire). */
 function point(angle: number, radius = 100) {
@@ -38,15 +45,21 @@ const slices = computed(() =>
   names.value.map((name, i) => {
     const start = i * step.value
     const end = start + step.value
-    let color = COLORS[i % COLORS.length]
+    let color = COLORS[i % COLORS.length]!
     // Évite deux parts voisines de la même couleur entre la dernière et la première
-    if (i === names.value.length - 1 && i % COLORS.length === 0) color = COLORS[2]
+    if (i > 0 && i === names.value.length - 1 && color === COLORS[0]) {
+      const previous = COLORS[(i - 1) % COLORS.length]
+      color = COLORS.find((c) => c !== COLORS[0] && c !== previous)!
+    }
+    const center = start + step.value / 2
     return {
       name,
       label: name.length > 10 ? `${name.slice(0, 9)}…` : name,
       color,
       path: `M0 0 L${point(start)} A100 100 0 ${step.value > 180 ? 1 : 0} 1 ${point(end)} Z`,
-      center: start + step.value / 2,
+      center,
+      // Le dégradé part du centre (sombre) vers le bord (couleur vive)
+      rim: point(center).split(' '),
     }
   }),
 )
@@ -55,6 +68,7 @@ function start() {
   names.value = [...players.names]
   rotation.value = 0
   chosen.value = null
+  lastPicked.value = null
   phase.value = 'play'
 }
 
@@ -62,10 +76,7 @@ function spin() {
   if (spinning.value) return
   unlockAudio()
 
-  const candidates =
-    excludeLast.value && chosen.value && names.value.length > 2
-      ? names.value.filter((n) => n !== chosen.value)
-      : names.value
+  const candidates = excluded.value ? names.value.filter((n) => n !== excluded.value) : names.value
 
   // On tire le joueur d'abord, puis on calcule l'angle pour que la roue s'arrête dessus
   const winner = pick(candidates)
@@ -86,6 +97,7 @@ function finish(winner = pendingWinner) {
   clearTimeout(finishTimer)
   spinning.value = false
   chosen.value = winner
+  lastPicked.value = winner
   pendingWinner = null
   vibrate(200)
   playDing()
@@ -110,13 +122,36 @@ function finish(winner = pendingWinner) {
           :aria-label="`Roue avec ${names.length} joueurs`"
           @transitionend="finish()"
         >
-          <g v-for="slice in slices" :key="slice.name">
-            <path :d="slice.path" :fill="slice.color" stroke="#0b1326" stroke-width="1.2" />
+          <defs>
+            <linearGradient
+              v-for="(slice, i) in slices"
+              :id="`slice-${i}`"
+              :key="slice.name"
+              gradientUnits="userSpaceOnUse"
+              x1="0"
+              y1="0"
+              :x2="slice.rim[0]"
+              :y2="slice.rim[1]"
+            >
+              <stop offset="0" :stop-color="slice.color" stop-opacity="0.05" />
+              <stop offset="0.55" :stop-color="slice.color" stop-opacity="0.3" />
+              <stop offset="1" :stop-color="slice.color" stop-opacity="0.85" />
+            </linearGradient>
+          </defs>
+          <circle r="100" fill="#131b2e" />
+          <g
+            v-for="(slice, i) in slices"
+            :key="slice.name"
+            class="slice"
+            :class="{ 'slice--excluded': slice.name === excluded }"
+          >
+            <path :d="slice.path" :fill="`url(#slice-${i})`" stroke="#0b1326" stroke-width="1.5" />
             <text
               :transform="`rotate(${slice.center}) translate(0 -58) rotate(90)`"
               text-anchor="middle"
               dominant-baseline="central"
               class="wheel__label"
+              :fill="slice.color"
             >
               {{ slice.label }}
             </text>
@@ -135,10 +170,21 @@ function finish(winner = pendingWinner) {
         <span v-else class="label">Qui sera l'élu ?</span>
       </p>
 
-      <label v-if="names.length > 2" class="option">
-        <input v-model="excludeLast" type="checkbox" />
-        Exclure le dernier désigné
-      </label>
+      <div v-if="names.length > 2" class="option">
+        <button
+          type="button"
+          role="switch"
+          class="switch"
+          :aria-checked="excludeLast"
+          @click="excludeLast = !excludeLast"
+        >
+          <span class="switch__track"><span class="switch__thumb" /></span>
+          Exclure le dernier désigné
+        </button>
+        <p v-if="excluded" class="option__hint">
+          {{ excluded }} ne peut pas être tiré au prochain tour
+        </p>
+      </div>
 
       <div class="actions">
         <button type="button" class="btn btn--big" :disabled="spinning" @click="spin">
@@ -193,7 +239,18 @@ function finish(winner = pendingWinner) {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 9px;
-  fill: #0b1326;
+  paint-order: stroke;
+  stroke: #0b1326;
+  stroke-width: 2px;
+}
+
+.slice {
+  transition: opacity 0.3s;
+}
+
+/* Joueur exclu du prochain tirage */
+.slice--excluded {
+  opacity: 0.25;
 }
 
 .result {
@@ -216,19 +273,62 @@ function finish(winner = pendingWinner) {
 
 .option {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 44px;
-  font-size: 14px;
-  color: var(--muted);
+  gap: 2px;
 }
 
-.option input {
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.switch__track {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--surface-3);
+  transition: background 0.2s;
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
   width: 22px;
-  min-height: 22px;
   height: 22px;
-  accent-color: var(--accent);
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 0.2s;
+}
+
+.switch[aria-checked='true'] {
+  color: var(--text);
+}
+
+.switch[aria-checked='true'] .switch__track {
+  background: var(--accent);
+}
+
+.switch[aria-checked='true'] .switch__thumb {
+  transform: translateX(20px);
+  background: var(--on-accent);
+}
+
+.option__hint {
+  font-size: 12px;
+  color: var(--accent);
 }
 
 .actions {
