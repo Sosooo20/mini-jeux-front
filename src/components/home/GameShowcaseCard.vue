@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import iconClock from '@/assets/home/icon-clock.svg'
 import iconPlayers from '@/assets/home/icon-players.svg'
-import iconRules from '@/assets/home/icon-rules.svg'
 
 export interface ShowcaseChip {
   label: string
@@ -28,7 +27,6 @@ export interface ShowcaseGame {
   players?: string
   cta: { label: string; icon: string }
   chips?: ShowcaseChip[]
-  withRules?: boolean
 }
 
 defineProps<{ game: ShowcaseGame }>()
@@ -82,10 +80,6 @@ defineProps<{ game: ShowcaseGame }>()
           {{ game.players }}
         </span>
         <div class="game__actions">
-          <RouterLink v-if="game.withRules" :to="{ name: game.routeName }" class="rules">
-            <img :src="iconRules" alt="" />
-            Règles
-          </RouterLink>
           <RouterLink :to="{ name: game.routeName }" class="cta">
             {{ game.cta.label }}
             <img :src="game.cta.icon" alt="" />
@@ -265,7 +259,6 @@ defineProps<{ game: ShowcaseGame }>()
   gap: 8px;
 }
 
-.rules,
 .cta {
   display: inline-flex;
   align-items: center;
@@ -281,19 +274,8 @@ defineProps<{ game: ShowcaseGame }>()
   transition: transform 0.08s;
 }
 
-.rules:active,
 .cta:active {
   transform: scale(0.96);
-}
-
-.rules {
-  gap: 4px;
-  padding: 10px 14px;
-  background: #222a3d;
-  color: var(--accent);
-  font-size: 11px;
-  line-height: 14px;
-  letter-spacing: 0.88px;
 }
 
 .cta {

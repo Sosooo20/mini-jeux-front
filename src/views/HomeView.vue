@@ -74,8 +74,7 @@ const games: ShowcaseGame[] = [
       { label: 'Valet : Le thème', color: '#c7c4d7' },
       { label: '10 : Freeze', color: '#dae2fd' },
     ],
-    cta: { label: 'Lancer', icon: ctaPalmier },
-    withRules: true,
+    cta: { label: 'Voir les règles', icon: ctaPalmier },
   },
   {
     routeName: 'chrono',
