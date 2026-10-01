@@ -23,8 +23,8 @@ export const GAMES = {
   },
   chrono: {
     name: "Chrono à l'aveugle",
-    accent: '#6bff8f',
-    onAccent: '#002109',
+    accent: '#4cd7f6',
+    onAccent: '#003640',
     minPlayers: 2,
   },
   confessions: {

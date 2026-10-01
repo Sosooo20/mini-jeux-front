@@ -65,9 +65,9 @@ const games: ShowcaseGame[] = [
   },
   {
     routeName: 'chrono',
-    accent: '#6bff8f',
-    onAccent: '#002109',
-    glow: 'rgba(128, 131, 255, 0.2)',
+    accent: '#4cd7f6',
+    onAccent: '#003640',
+    glow: 'rgba(76, 215, 246, 0.25)',
     tag: { icon: tagChrono, label: 'Précision pure' },
     kicker: { icon: kickerChrono, label: 'Instinct & réflexe' },
     titleStart: 'Chrono à',
