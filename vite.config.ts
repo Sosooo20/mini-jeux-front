@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const THEME_COLOR = '#1a1027'
+const THEME_COLOR = '#0b1326'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -42,7 +42,7 @@ export default defineConfig({
       },
       workbox: {
         // Jeux locaux jouables hors ligne : tout le front est mis en cache
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg,woff2,mp3,ogg,wav}'],
         // Le temps réel et l'API ne doivent jamais passer par le cache
         navigateFallbackDenylist: [/^\/socket\.io/, /^\/health/],
       },

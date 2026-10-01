@@ -1,3 +1,7 @@
+// Polices embarquées (pas de Google Fonts) pour que la PWA marche hors ligne
+import '@fontsource/outfit/600.css'
+import '@fontsource/outfit/700.css'
+import '@fontsource/plus-jakarta-sans/400.css'
 import './assets/main.css'
 
 import { createApp } from 'vue'
