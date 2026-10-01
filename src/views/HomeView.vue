@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AppHeader from '@/components/home/AppHeader.vue'
-import BottomNav from '@/components/home/BottomNav.vue'
 import GameShowcaseCard, { type ShowcaseGame } from '@/components/home/GameShowcaseCard.vue'
 
 // Désactivés tant qu'il n'y a pas de jeux en ligne (voir le template)
@@ -154,8 +153,6 @@ const games: ShowcaseGame[] = [
       <GameShowcaseCard v-for="game in games" :key="game.routeName" :game="game" />
     </section>
   </main>
-
-  <BottomNav />
 </template>
 
 <style scoped>
@@ -163,8 +160,8 @@ const games: ShowcaseGame[] = [
   display: flex;
   flex-direction: column;
   gap: 24px;
-  /* place pour le header fixe (64px) et la nav fixe (80px) */
-  padding: calc(64px + 30px - 16px) 0 calc(80px + 40px);
+  /* place pour le header fixe (64px) */
+  padding: calc(64px + 30px - 16px) 0 24px;
 }
 
 .quick-actions {
