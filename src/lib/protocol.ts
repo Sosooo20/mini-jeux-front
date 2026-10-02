@@ -23,7 +23,16 @@ export const FASTEST_COLLECT_MS = 6000
 /** En dessous, impossible pour un humain : compté comme faux départ */
 export const FASTEST_MIN_REACTION_MS = 80
 
-export type GameId = 'susceptible' | 'quiz' | 'confessions' | 'fastest'
+/** Dico des potes : lecture du mot, écriture, vote, longueur max, manches */
+export const DICO_WORD_SECONDS = 5
+export const DICO_WRITE_SECONDS = 45
+export const DICO_VOTE_SECONDS = 30
+export const DICO_MAX_LENGTH = 140
+export const DICO_MIN_PLAYERS = 3
+export const DICO_DEFAULT_ROUNDS = 5
+export const DICO_MAX_ROUNDS = 10
+
+export type GameId = 'susceptible' | 'quiz' | 'confessions' | 'fastest' | 'dico'
 
 /** « Qui de nous… » : niveau d'une question, et catégorie choisie par l'hôte (mix = les deux) */
 export type SusceptibleLevel = 'soft' | 'spicy'
@@ -192,7 +201,44 @@ export type FastestView =
     }
   | { id: 'fastest'; phase: 'final'; rounds: number; defeats: Record<string, number>; losers: string[] }
 
-export type GameView = SusceptibleView | QuizView | ConfessionsView | FastestView
+// ---------- Le dico des potes ----------
+
+interface DicoRound {
+  id: 'dico'
+  /** Manche en cours (1, 2…) et nombre total */
+  round: number
+  rounds: number
+  word: string
+}
+
+export type DicoView =
+  | (DicoRound & { phase: 'word'; deadline: number })
+  | (DicoRound & {
+      phase: 'writing'
+      deadline: number
+      /** Qui a déjà envoyé sa définition (pas laquelle) */
+      submitted: string[]
+      mine: string | null
+    })
+  | (DicoRound & {
+      phase: 'voting'
+      deadline: number
+      /** Mélangées, avec la vraie, JAMAIS d'auteur ici (mine : la sienne, qu'on ne peut pas choisir) */
+      definitions: { id: string; text: string; mine: boolean }[]
+      voted: string[]
+      myVote: string | null
+    })
+  | (DicoRound & {
+      phase: 'reveal'
+      /** authorId null = la vraie définition */
+      definitions: { id: string; text: string; authorId: string | null; voters: string[] }[]
+      /** Points gagnés pendant la manche */
+      gained: Record<string, number>
+    })
+  | (DicoRound & { phase: 'scores'; scores: Record<string, number>; gained: Record<string, number> })
+  | (DicoRound & { phase: 'final'; scores: Record<string, number>; losers: string[] })
+
+export type GameView = SusceptibleView | QuizView | ConfessionsView | FastestView | DicoView
 
 // ---------- Jeu photo (en parallèle des autres jeux) ----------
 
@@ -246,6 +292,9 @@ export interface ClientToServer {
   'confession:write': (p: { text: string }, ack: Ack) => void
   'confession:guess': (p: { author: string }, ack: Ack) => void
   /** Durée mesurée par le téléphone, ou early: true pour un appui avant le bouton */
+  /** Erreur (ack) si la définition est vide, trop longue, ou identique à une autre */
+  'dico:submit': (p: { text: string }, ack: Ack) => void
+  'dico:vote': (p: { definitionId: string }, ack: Ack) => void
   'fastest:tap': (p: { roundId: string; reactionMs?: number; early?: boolean }, ack: Ack) => void
   'photo:start': (p: { target: string }, ack: Ack) => void
   'photo:finish': (ack: Ack) => void

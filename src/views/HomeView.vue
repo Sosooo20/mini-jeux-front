@@ -51,6 +51,11 @@ const onlineGames = [
     description: 'Un bouton apparaît au hasard, le plus lent à appuyer boit.',
   },
   {
+    emoji: '📖',
+    name: 'Le dico des potes',
+    description: 'Invente une fausse définition crédible, trouve la vraie.',
+  },
+  {
     emoji: '📸',
     name: 'Jeu photo',
     description: 'Prends la cible en photo en scred, toute la soirée.',

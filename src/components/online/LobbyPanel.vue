@@ -5,6 +5,9 @@ import PhotoStatus from '@/components/online/PhotoStatus.vue'
 import {
   CONFESSION_MIN_PLAYERS,
   CONFESSION_ROUNDS,
+  DICO_DEFAULT_ROUNDS,
+  DICO_MAX_ROUNDS,
+  DICO_MIN_PLAYERS,
   MAX_PLAYERS,
   SUSCEPTIBLE_CATEGORIES,
   type GameId,
@@ -19,6 +22,7 @@ const emit = defineEmits<{ leave: [] }>()
 const view = computed(() => room.view!)
 const onlineCount = computed(() => view.value.players.filter((p) => p.status === 'online').length)
 const rounds = ref(1)
+const dicoRounds = ref(DICO_DEFAULT_ROUNDS)
 const category = ref<SusceptibleCategory>('soft')
 const shareInfo = ref<string | null>(null)
 const error = ref<string | null>(null)
@@ -50,6 +54,7 @@ async function start(game: GameId) {
   error.value = null
   try {
     if (game === 'quiz') await room.startGame(game, { rounds: rounds.value })
+    else if (game === 'dico') await room.startGame(game, { rounds: dicoRounds.value })
     else if (game === 'susceptible') await room.startGame(game, { category: category.value })
     else await room.startGame(game)
   } catch (e) {
@@ -137,6 +142,28 @@ async function start(game: GameId) {
           <small>Un bouton apparaît au hasard : le plus lent à appuyer boit.</small>
         </div>
         <button type="button" class="btn" :disabled="onlineCount < 2" @click="start('fastest')">
+          Lancer
+        </button>
+      </div>
+      <div class="game-row">
+        <div>
+          <strong>Le dico des potes 📖</strong>
+          <small>
+            Invente une fausse définition, trouve la vraie. {{ DICO_MIN_PLAYERS }} joueurs minimum.
+          </small>
+          <label class="rounds">
+            Manches
+            <select v-model.number="dicoRounds">
+              <option v-for="n in DICO_MAX_ROUNDS" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </label>
+        </div>
+        <button
+          type="button"
+          class="btn"
+          :disabled="onlineCount < DICO_MIN_PLAYERS"
+          @click="start('dico')"
+        >
           Lancer
         </button>
       </div>

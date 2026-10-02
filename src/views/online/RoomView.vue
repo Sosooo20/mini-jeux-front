@@ -8,6 +8,7 @@ import SusceptibleGame from '@/components/online/SusceptibleGame.vue'
 import QuizGame from '@/components/online/QuizGame.vue'
 import ConfessionsGame from '@/components/online/ConfessionsGame.vue'
 import FastestGame from '@/components/online/FastestGame.vue'
+import DicoGame from '@/components/online/dico/DicoGame.vue'
 import { GAMES, accentStyle } from '@/lib/games'
 import { useRoomStore } from '@/stores/room'
 import { useWakeLock } from '@/composables/useWakeLock'
@@ -27,6 +28,7 @@ const GAME_TITLES = {
   quiz: 'Quiz de potes',
   confessions: 'Confessions anonymes',
   fastest: 'Le plus rapide',
+  dico: 'Le dico des potes',
 } as const
 
 /** Ce que fait le bouton principal de l'hôte (null = rien à faire, on attend les joueurs) */
@@ -34,6 +36,13 @@ const nextLabel = computed(() => {
   const g = game.value
   if (!g) return null
   if (g.id === 'fastest') return g.phase === 'results' ? 'Manche suivante' : null
+  if (g.id === 'dico') {
+    if (g.phase === 'writing' || g.phase === 'voting') return 'Passer à la suite'
+    if (g.phase === 'reveal')
+      return g.round >= g.rounds ? 'Voir les résultats' : 'Voir le classement'
+    if (g.phase === 'scores') return 'Manche suivante'
+    return null
+  }
   if (g.phase === 'reveal') {
     if (g.id === 'susceptible') return 'Question suivante'
     if (g.id === 'confessions' && g.round >= g.totalRounds) return 'Voir les résultats'
@@ -46,7 +55,7 @@ const nextLabel = computed(() => {
   return null
 })
 const waitingForHost = computed(() =>
-  ['reveal', 'results', 'final'].includes(game.value?.phase ?? ''),
+  ['reveal', 'results', 'scores', 'final'].includes(game.value?.phase ?? ''),
 )
 /** Libellé du bouton d'arrêt : Le plus rapide passe d'abord par le compteur de défaites */
 const stopLabel = computed(() => {
@@ -105,7 +114,8 @@ async function leave() {
       <SusceptibleGame v-if="game.id === 'susceptible'" :game="game" />
       <QuizGame v-else-if="game.id === 'quiz'" :game="game" />
       <ConfessionsGame v-else-if="game.id === 'confessions'" :game="game" />
-      <FastestGame v-else :game="game" />
+      <FastestGame v-else-if="game.id === 'fastest'" :game="game" />
+      <DicoGame v-else :game="game" />
 
       <div class="host-bar">
         <template v-if="room.isHost">
@@ -113,7 +123,9 @@ async function leave() {
             v-if="nextLabel"
             type="button"
             class="btn"
-            :class="['reveal', 'results'].includes(game.phase) ? 'btn--big' : 'btn--ghost'"
+            :class="
+              ['reveal', 'results', 'scores'].includes(game.phase) ? 'btn--big' : 'btn--ghost'
+            "
             @click="run(() => room.nextStep())"
           >
             {{ nextLabel }}
