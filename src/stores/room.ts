@@ -118,6 +118,8 @@ export const useRoomStore = defineStore('room', () => {
     call((ack) => socket.emit('confession:write', { text }, ack))
   const guessAuthor = (author: string) =>
     call((ack) => socket.emit('confession:guess', { author }, ack))
+  const tapFastest = (p: { roundId: string; reactionMs?: number; early?: boolean }) =>
+    call((ack) => socket.emit('fastest:tap', p, ack))
   const startPhotoGame = (target: string) =>
     call((ack) => socket.emit('photo:start', { target }, ack))
   const finishPhotoGame = () => call((ack) => socket.emit('photo:finish', ack))
@@ -173,6 +175,7 @@ export const useRoomStore = defineStore('room', () => {
     answer,
     writeConfession,
     guessAuthor,
+    tapFastest,
     startPhotoGame,
     finishPhotoGame,
     uploadAvatar,

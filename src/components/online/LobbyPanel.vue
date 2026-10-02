@@ -133,6 +133,15 @@ async function start(game: GameId) {
       </div>
       <div class="game-row">
         <div>
+          <strong>Le plus rapide ⚡</strong>
+          <small>Un bouton apparaît au hasard : le plus lent à appuyer boit.</small>
+        </div>
+        <button type="button" class="btn" :disabled="onlineCount < 2" @click="start('fastest')">
+          Lancer
+        </button>
+      </div>
+      <div class="game-row">
+        <div>
           <strong>Confessions anonymes</strong>
           <small>
             {{ CONFESSION_ROUNDS }} manches : écris un secret, devine qui a écrit celui qu'on te

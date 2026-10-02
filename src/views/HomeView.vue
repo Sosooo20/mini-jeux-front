@@ -46,6 +46,11 @@ const onlineGames = [
     description: 'Chacun écrit un secret, devine qui a écrit celui que tu reçois.',
   },
   {
+    emoji: '⚡',
+    name: 'Le plus rapide',
+    description: 'Un bouton apparaît au hasard, le plus lent à appuyer boit.',
+  },
+  {
     emoji: '📸',
     name: 'Jeu photo',
     description: 'Prends la cible en photo en scred, toute la soirée.',

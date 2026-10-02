@@ -7,6 +7,7 @@ import LobbyPanel from '@/components/online/LobbyPanel.vue'
 import SusceptibleGame from '@/components/online/SusceptibleGame.vue'
 import QuizGame from '@/components/online/QuizGame.vue'
 import ConfessionsGame from '@/components/online/ConfessionsGame.vue'
+import FastestGame from '@/components/online/FastestGame.vue'
 import { GAMES, accentStyle } from '@/lib/games'
 import { useRoomStore } from '@/stores/room'
 import { useWakeLock } from '@/composables/useWakeLock'
@@ -25,12 +26,14 @@ const GAME_TITLES = {
   susceptible: 'Qui est le plus susceptible ?',
   quiz: 'Quiz de potes',
   confessions: 'Confessions anonymes',
+  fastest: 'Le plus rapide',
 } as const
 
 /** Ce que fait le bouton principal de l'hôte (null = rien à faire, on attend les joueurs) */
 const nextLabel = computed(() => {
   const g = game.value
   if (!g) return null
+  if (g.id === 'fastest') return g.phase === 'results' ? 'Manche suivante' : null
   if (g.phase === 'reveal') {
     if (g.id === 'susceptible') return 'Question suivante'
     if (g.id === 'confessions' && g.round >= g.totalRounds) return 'Voir les résultats'
@@ -42,9 +45,16 @@ const nextLabel = computed(() => {
   }
   return null
 })
-const waitingForHost = computed(
-  () => game.value?.phase === 'reveal' || game.value?.phase === 'final',
+const waitingForHost = computed(() =>
+  ['reveal', 'results', 'final'].includes(game.value?.phase ?? ''),
 )
+/** Libellé du bouton d'arrêt : Le plus rapide passe d'abord par le compteur de défaites */
+const stopLabel = computed(() => {
+  const g = game.value
+  if (g?.phase === 'final') return 'Retour au salon'
+  if (g?.id === 'fastest' && g.phase === 'results') return 'Terminer la partie'
+  return 'Arrêter le jeu'
+})
 
 useWakeLock(computed(() => inThisRoom.value))
 
@@ -94,7 +104,8 @@ async function leave() {
     <template v-else>
       <SusceptibleGame v-if="game.id === 'susceptible'" :game="game" />
       <QuizGame v-else-if="game.id === 'quiz'" :game="game" />
-      <ConfessionsGame v-else :game="game" />
+      <ConfessionsGame v-else-if="game.id === 'confessions'" :game="game" />
+      <FastestGame v-else :game="game" />
 
       <div class="host-bar">
         <template v-if="room.isHost">
@@ -102,13 +113,13 @@ async function leave() {
             v-if="nextLabel"
             type="button"
             class="btn"
-            :class="game.phase === 'reveal' ? 'btn--big' : 'btn--ghost'"
+            :class="['reveal', 'results'].includes(game.phase) ? 'btn--big' : 'btn--ghost'"
             @click="run(() => room.nextStep())"
           >
             {{ nextLabel }}
           </button>
           <button type="button" class="btn btn--ghost" @click="run(() => room.stopGame())">
-            {{ game.phase === 'final' ? 'Retour au salon' : 'Arrêter le jeu' }}
+            {{ stopLabel }}
           </button>
         </template>
         <p v-else-if="waitingForHost" class="waiting">En attente de l'hôte 👑</p>

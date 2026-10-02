@@ -13,8 +13,17 @@ export const CONFESSION_ROUNDS = 3
 export const CONFESSION_MAX_LENGTH = 280
 /** À 2, on n'a qu'un seul auteur possible : impossible de se tromper */
 export const CONFESSION_MIN_PLAYERS = 3
+/** Le plus rapide : compte à rebours, attente cachée avant le bouton, temps pour appuyer */
+export const FASTEST_COUNTDOWN_SECONDS = 3
+export const FASTEST_MIN_WAIT_MS = 2000
+export const FASTEST_MAX_WAIT_MS = 8000
+export const FASTEST_TIMEOUT_MS = 5000
+/** Marge réseau : le serveur clôt la manche 1 s après le temps limite */
+export const FASTEST_COLLECT_MS = 6000
+/** En dessous, impossible pour un humain : compté comme faux départ */
+export const FASTEST_MIN_REACTION_MS = 80
 
-export type GameId = 'susceptible' | 'quiz' | 'confessions'
+export type GameId = 'susceptible' | 'quiz' | 'confessions' | 'fastest'
 
 /** « Qui de nous… » : niveau d'une question, et catégorie choisie par l'hôte (mix = les deux) */
 export type SusceptibleLevel = 'soft' | 'spicy'
@@ -143,7 +152,47 @@ export type ConfessionsView =
       losers: string[]
     })
 
-export type GameView = SusceptibleView | QuizView | ConfessionsView
+// ---------- Le plus rapide ----------
+
+/** ok = a appuyé à temps · early = faux départ · timeout = trop lent (ou rien) */
+export type FastestStatus = 'ok' | 'early' | 'timeout'
+
+export interface FastestTap {
+  status: FastestStatus
+  /** Temps de réaction mesuré par le téléphone (null si faux départ ou trop lent) */
+  ms: number | null
+}
+
+export interface FastestResult extends FastestTap {
+  playerId: string
+}
+
+export type FastestView =
+  | { id: 'fastest'; phase: 'countdown'; round: number; roundId: string; deadline: number; playing: boolean }
+  | {
+      id: 'fastest'
+      // Pas d'échéance envoyée pendant l'attente : personne ne peut anticiper le bouton
+      phase: 'waiting' | 'go'
+      round: number
+      roundId: string
+      /** false = arrivé en cours de manche : spectateur */
+      playing: boolean
+      /** Qui a déjà appuyé (pas son temps) */
+      tapped: string[]
+      mine: FastestTap | null
+    }
+  | {
+      id: 'fastest'
+      phase: 'results'
+      round: number
+      /** Du plus rapide au plus lent, puis faux départs et trop lents */
+      ranking: FastestResult[]
+      losers: string[]
+      defeats: Record<string, number>
+    }
+  | { id: 'fastest'; phase: 'final'; rounds: number; defeats: Record<string, number>; losers: string[] }
+
+export type GameView = SusceptibleView | QuizView | ConfessionsView | FastestView
 
 // ---------- Jeu photo (en parallèle des autres jeux) ----------
 
@@ -196,6 +245,8 @@ export interface ClientToServer {
   'quiz:answer': (p: { choice: number }, ack: Ack) => void
   'confession:write': (p: { text: string }, ack: Ack) => void
   'confession:guess': (p: { author: string }, ack: Ack) => void
+  /** Durée mesurée par le téléphone, ou early: true pour un appui avant le bouton */
+  'fastest:tap': (p: { roundId: string; reactionMs?: number; early?: boolean }, ack: Ack) => void
   'photo:start': (p: { target: string }, ack: Ack) => void
   'photo:finish': (ack: Ack) => void
 }
