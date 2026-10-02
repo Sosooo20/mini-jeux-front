@@ -43,21 +43,41 @@ watch(
   { immediate: true },
 )
 
+/** Photo en cours de préparation (recadrage dans le worker) */
+const preparing = ref(false)
+
 async function pickImage(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = '' // pour pouvoir reprendre la même photo
   if (!file) return
   error.value = null
+  preparing.value = true
   try {
     avatar.value = await blobToDataUrl(await squareJpeg(file))
   } catch (e) {
     error.value = (e as Error).message
+  } finally {
+    preparing.value = false
+  }
+}
+
+/**
+ * Envoi de la photo de profil en arrière-plan : on entre dans le salon sans l'attendre.
+ * Un nouvel essai en cas d'échec (réseau instable).
+ */
+async function uploadAvatarInBackground(dataUrl: string | null, roomCode: string) {
+  const blob = dataUrl ? await dataUrlToBlob(dataUrl) : null
+  try {
+    await room.uploadAvatar(blob, roomCode)
+  } catch {
+    await new Promise((r) => setTimeout(r, 2000))
+    await room.uploadAvatar(blob, roomCode).catch(() => {})
   }
 }
 
 async function submit() {
-  if (!pseudo.value.trim() || busy.value) return
+  if (!pseudo.value.trim() || busy.value || preparing.value) return
   busy.value = true
   error.value = null
   try {
@@ -76,10 +96,8 @@ async function submit() {
     const avatarChanged = avatar.value !== user.avatar
     user.setAvatar(avatar.value)
     // Nouveau salon : on envoie la photo s'il y en a une ; modification : seulement si elle a changé
-    if (avatar.value && (!editing.value || avatarChanged)) {
-      await room.uploadAvatar(await dataUrlToBlob(avatar.value))
-    } else if (!avatar.value && editing.value && avatarChanged) {
-      await room.uploadAvatar(null)
+    if ((avatar.value && (!editing.value || avatarChanged)) || (editing.value && avatarChanged)) {
+      void uploadAvatarInBackground(avatar.value, roomCode)
     }
 
     router.replace({ name: 'room', params: { code: roomCode } })
@@ -97,7 +115,10 @@ async function submit() {
 
     <form class="card profile" @submit.prevent="submit">
       <div class="photo">
-        <PlayerAvatar :name="pseudo || '?'" :src="avatar" :size="112" />
+        <div class="photo__preview" :class="{ preparing }">
+          <PlayerAvatar :name="pseudo || '?'" :src="avatar" :size="112" />
+          <span v-if="preparing" class="photo__spinner" aria-label="Préparation de la photo" />
+        </div>
         <div class="photo__buttons">
           <label class="btn btn--ghost photo__btn">
             🖼️ Galerie
@@ -127,8 +148,13 @@ async function submit() {
     </form>
 
     <div class="actions">
-      <button type="button" class="btn btn--big" :disabled="!pseudo.trim() || busy" @click="submit">
-        {{ busy ? 'Un instant…' : submitLabel }}
+      <button
+        type="button"
+        class="btn btn--big"
+        :disabled="!pseudo.trim() || busy || preparing"
+        @click="submit"
+      >
+        {{ busy ? 'Un instant…' : preparing ? 'Préparation de la photo…' : submitLabel }}
       </button>
       <RouterLink
         v-if="error && !creating && !editing"
@@ -153,6 +179,33 @@ async function submit() {
   align-items: center;
   gap: 16px;
   margin-bottom: 8px;
+}
+
+.photo__preview {
+  position: relative;
+  display: flex;
+}
+
+.photo__preview.preparing :deep(.avatar) {
+  opacity: 0.4;
+}
+
+.photo__spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--accent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .photo__buttons {

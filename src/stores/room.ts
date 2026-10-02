@@ -121,8 +121,12 @@ export const useRoomStore = defineStore('room', () => {
 
   // ---------- Fichiers (HTTP) ----------
 
-  async function send(method: 'PUT' | 'DELETE' | 'POST', path: string, body?: Blob) {
-    const code = view.value?.code
+  async function send(
+    method: 'PUT' | 'DELETE' | 'POST',
+    path: string,
+    body?: Blob,
+    code = view.value?.code,
+  ) {
     if (!code) throw new Error("Tu n'es dans aucun salon.")
     const res = await fetch(`/rooms/${code}/${path}`, {
       method,
@@ -135,8 +139,9 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
 
-  const uploadAvatar = (jpeg: Blob | null) =>
-    jpeg ? send('PUT', 'avatar', jpeg) : send('DELETE', 'avatar')
+  /** `code` : à préciser juste après avoir rejoint (l'état du salon peut ne pas être arrivé) */
+  const uploadAvatar = (jpeg: Blob | null, code?: string) =>
+    jpeg ? send('PUT', 'avatar', jpeg, code) : send('DELETE', 'avatar', undefined, code)
   const uploadPhoto = (jpeg: Blob) => send('POST', 'photos', jpeg)
 
   // ---------- Aides d'affichage ----------

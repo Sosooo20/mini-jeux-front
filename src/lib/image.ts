@@ -1,48 +1,56 @@
-// Préparation des photos sur le téléphone avant l'envoi : plus légères, plus rapides.
+// Photos préparées sur le téléphone avant l'envoi : plus légères, plus rapides.
+// Le travail se fait dans un worker (l'écran ne fige pas) ; en secours, sur le fil principal.
+import { prepareImage, type ImageJob } from './imagePrepare'
 
-async function decode(file: Blob): Promise<ImageBitmap> {
+type Pending = { resolve: (blob: Blob) => void; reject: (error: Error) => void }
+
+let worker: Worker | null = null
+let nextId = 0
+const pending = new Map<number, Pending>()
+
+function getWorker(): Worker | null {
+  if (worker) return worker
+  if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined') return null
   try {
-    // L'orientation de l'appareil photo (EXIF) est appliquée par défaut
-    return await createImageBitmap(file)
+    worker = new Worker(new URL('./image.worker.ts', import.meta.url), { type: 'module' })
+    worker.onmessage = (event: MessageEvent<{ id: number; blob?: Blob; error?: string }>) => {
+      const { id, blob, error } = event.data
+      const job = pending.get(id)
+      pending.delete(id)
+      if (blob) job?.resolve(blob)
+      else job?.reject(new Error(error ?? "Impossible de préparer l'image."))
+    }
+    return worker
   } catch {
-    throw new Error('Impossible de lire cette image (format non pris en charge ?).')
+    return null
   }
 }
 
-function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Impossible de préparer l'image."))),
-      'image/jpeg',
-      quality,
-    ),
-  )
+async function run(file: Blob, job: ImageJob): Promise<Blob> {
+  const w = getWorker()
+  if (w) {
+    try {
+      return await new Promise<Blob>((resolve, reject) => {
+        const id = nextId++
+        pending.set(id, { resolve, reject })
+        w.postMessage({ id, file, job })
+      })
+    } catch (e) {
+      // Image illisible : inutile de réessayer ailleurs
+      if ((e as Error).message.startsWith('Impossible de lire')) throw e
+    }
+  }
+  // Pas de worker (vieux navigateur) ou échec du worker : fil principal
+  return prepareImage(file, job)
 }
 
 /** Photo de profil : plus grand carré au centre, réduit à size × size */
-export async function squareJpeg(file: Blob, size = 256, quality = 0.82): Promise<Blob> {
-  const img = await decode(file)
-  const side = Math.min(img.width, img.height)
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  canvas
-    .getContext('2d')!
-    .drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size)
-  img.close()
-  return toJpeg(canvas, quality)
-}
+export const squareJpeg = (file: Blob, size = 256, quality = 0.82) =>
+  run(file, { kind: 'square', size, quality })
 
 /** Photo du jeu : réduite pour que le plus grand côté fasse au plus `max` pixels */
-export async function resizedJpeg(file: Blob, max = 1280, quality = 0.8): Promise<Blob> {
-  const img = await decode(file)
-  const scale = Math.min(1, max / Math.max(img.width, img.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(img.width * scale)
-  canvas.height = Math.round(img.height * scale)
-  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-  img.close()
-  return toJpeg(canvas, quality)
-}
+export const resizedJpeg = (file: Blob, max = 1280, quality = 0.8) =>
+  run(file, { kind: 'fit', max, quality })
 
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

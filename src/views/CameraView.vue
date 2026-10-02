@@ -17,31 +17,75 @@ const iAmTarget = computed(() => photo.value?.targetId === me.value)
 const myCount = computed(() => photo.value?.counts[me.value] ?? 0)
 const photosNewestFirst = computed(() => [...(photo.value?.photos ?? [])].reverse())
 
-const sending = ref(false)
 const message = ref<string | null>(null)
 const error = ref<string | null>(null)
+
+/** Photos prises mais pas encore confirmées par le serveur (affichées tout de suite) */
+interface PendingShot {
+  id: number
+  /** Aperçu de la photo préparée (null tant qu'elle est en préparation) */
+  url: string | null
+  state: 'preparing' | 'sending' | 'error'
+}
+const pendingShots = ref<PendingShot[]>([])
+let nextShot = 0
+/** Les envois partent un par un (le serveur refuse 2 photos à moins de 2 s d'écart) */
+let queue: Promise<void> = Promise.resolve()
+let lastUpload = 0
+const COOLDOWN_MS = 2100
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+function updateShot(id: number, patch: Partial<PendingShot>) {
+  const shot = pendingShots.value.find((s) => s.id === id)
+  if (shot) Object.assign(shot, patch)
+}
+
+function removeShot(id: number) {
+  const shot = pendingShots.value.find((s) => s.id === id)
+  if (shot?.url) URL.revokeObjectURL(shot.url)
+  pendingShots.value = pendingShots.value.filter((s) => s.id !== id)
+}
 
 onMounted(() => {
   // Si on était dans un salon, on s'y reconnecte pour retrouver le jeu photo
   if (room.lastRoom()) room.connect()
 })
 
-async function shoot(event: Event) {
+/**
+ * On n'attend rien : la photo apparaît tout de suite dans la galerie (« envoi… »),
+ * la préparation se fait dans un worker et l'envoi en arrière-plan.
+ */
+function shoot(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
-  sending.value = true
   message.value = error.value = null
-  try {
-    await room.uploadPhoto(await resizedJpeg(file))
-    vibrate(80)
-    message.value = 'Photo envoyée ! 🤫'
-  } catch (e) {
-    error.value = (e as Error).message
-  } finally {
-    sending.value = false
-  }
+  vibrate(30)
+
+  const id = nextShot++
+  pendingShots.value.unshift({ id, url: null, state: 'preparing' })
+  const prepared = resizedJpeg(file)
+  prepared
+    .then((jpeg) => updateShot(id, { url: URL.createObjectURL(jpeg), state: 'sending' }))
+    .catch(() => {})
+
+  queue = queue.then(async () => {
+    try {
+      const jpeg = await prepared
+      const wait = lastUpload + COOLDOWN_MS - Date.now()
+      if (wait > 0) await sleep(wait)
+      await room.uploadPhoto(jpeg)
+      lastUpload = Date.now()
+      vibrate(80)
+      message.value = 'Photo envoyée ! 🤫'
+      removeShot(id)
+    } catch (e) {
+      updateShot(id, { state: 'error' })
+      error.value = (e as Error).message
+    }
+  })
 }
 </script>
 
@@ -81,26 +125,47 @@ async function shoot(event: Event) {
       </section>
       <p v-else-if="iAmTarget" class="card warn">C'est toi la cible 👀 Méfie-toi des téléphones…</p>
       <template v-else>
-        <label class="btn btn--big shoot" :class="{ busy: sending }">
-          📸 {{ sending ? 'Envoi…' : `Prendre ${target?.pseudo ?? ''} en photo` }}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            :disabled="sending"
-            @change="shoot"
-          />
+        <label class="btn btn--big shoot">
+          📸 Prendre {{ target?.pseudo ?? '' }} en photo
+          <input type="file" accept="image/*" capture="environment" hidden @change="shoot" />
         </label>
-        <p class="count">Tu en as pris {{ myCount }}</p>
+        <p class="count">
+          Tu en as pris {{ myCount }}
+          <template v-if="pendingShots.length">
+            · {{ pendingShots.length }} en cours d'envoi</template
+          >
+        </p>
       </template>
 
       <p v-if="message" class="message">{{ message }}</p>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-      <section v-if="photosNewestFirst.length" class="gallery">
+      <section v-if="photosNewestFirst.length || pendingShots.length" class="gallery">
         <h2>Galerie ({{ photosNewestFirst.length }})</h2>
         <div class="gallery__grid">
+          <!-- Mes photos en cours d'envoi, affichées sans attendre le serveur -->
+          <figure
+            v-for="s in pendingShots"
+            :key="`pending-${s.id}`"
+            class="pending"
+            :class="s.state"
+            @click="s.state === 'error' && removeShot(s.id)"
+          >
+            <div class="pending__tile">
+              <img v-if="s.url" :src="s.url" alt="" />
+              <span v-if="s.state !== 'error'" class="pending__spinner" aria-hidden="true" />
+              <span v-else class="pending__error" aria-hidden="true">⚠️</span>
+            </div>
+            <figcaption>
+              {{
+                s.state === 'preparing'
+                  ? 'Préparation…'
+                  : s.state === 'sending'
+                    ? 'Envoi…'
+                    : 'Échec (toucher pour retirer)'
+              }}
+            </figcaption>
+          </figure>
           <figure v-for="p in photosNewestFirst" :key="p.id">
             <a :href="p.url" target="_blank" rel="noopener">
               <img :src="p.url" alt="" loading="lazy" />
@@ -151,8 +216,46 @@ async function shoot(event: Event) {
   cursor: pointer;
 }
 
-.shoot.busy {
-  opacity: 0.6;
+.pending__tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.pending__tile img {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+}
+
+.pending__spinner {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--accent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.pending__error {
+  position: relative;
+  font-size: 24px;
+}
+
+.pending.error {
+  cursor: pointer;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .count,
