@@ -16,6 +16,11 @@ export const CONFESSION_MIN_PLAYERS = 3
 
 export type GameId = 'susceptible' | 'quiz' | 'confessions'
 
+/** « Qui de nous… » : niveau d'une question, et catégorie choisie par l'hôte (mix = les deux) */
+export type SusceptibleLevel = 'soft' | 'spicy'
+export type SusceptibleCategory = SusceptibleLevel | 'mix'
+export const SUSCEPTIBLE_CATEGORIES: SusceptibleCategory[] = ['soft', 'spicy', 'mix']
+
 export interface PlayerView {
   id: string
   pseudo: string
@@ -32,7 +37,9 @@ export type SusceptibleView =
   | {
       id: 'susceptible'
       phase: 'vote'
+      category: SusceptibleCategory
       question: string
+      level: SusceptibleLevel
       deadline: number
       /** Qui a déjà voté (pas pour qui) */
       voted: string[]
@@ -41,7 +48,9 @@ export type SusceptibleView =
   | {
       id: 'susceptible'
       phase: 'reveal'
+      category: SusceptibleCategory
       question: string
+      level: SusceptibleLevel
       /** votant -> désigné */
       votes: Record<string, string>
       /** Le ou les plus désignés : ils boivent */
@@ -177,7 +186,10 @@ export interface ClientToServer {
   'room:join': (p: { code: string; pseudo: string }, ack: Ack) => void
   'room:leave': (ack: Ack) => void
   'player:update': (p: { pseudo: string }, ack: Ack) => void
-  'game:start': (p: { game: GameId; rounds?: number }, ack: Ack) => void
+  'game:start': (
+    p: { game: GameId; rounds?: number; category?: SusceptibleCategory },
+    ack: Ack,
+  ) => void
   'game:next': (ack: Ack) => void
   'game:stop': (ack: Ack) => void
   'vote:cast': (p: { target: string }, ack: Ack) => void

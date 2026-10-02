@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
 import DeadlineBar from '@/components/online/DeadlineBar.vue'
 import type { SusceptibleView } from '@/lib/protocol'
+import { CATEGORY_LABEL } from '@/lib/susceptible'
 import { useRoomStore } from '@/stores/room'
 import { vibrate } from '@/composables/useVibrate'
 
@@ -47,7 +48,12 @@ async function vote(target: string) {
 
 <template>
   <section class="question card">
-    <p class="label">Qui est le plus susceptible de…</p>
+    <div class="question__head">
+      <p class="label">Qui est le plus susceptible de…</p>
+      <span class="badge" :class="`badge--${game.level}`" :title="CATEGORY_LABEL[game.category]">
+        {{ CATEGORY_LABEL[game.level] }}
+      </span>
+    </div>
     <p class="question__text">{{ game.question }}</p>
     <DeadlineBar v-if="game.phase === 'vote'" :deadline="game.deadline" />
   </section>
@@ -101,6 +107,27 @@ async function vote(target: string) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.question__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: var(--surface-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.badge--spicy {
+  background: color-mix(in srgb, var(--danger) 25%, var(--surface-3));
 }
 
 .question__text {

@@ -2,7 +2,15 @@
 import { computed, ref } from 'vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
 import PhotoStatus from '@/components/online/PhotoStatus.vue'
-import { CONFESSION_MIN_PLAYERS, CONFESSION_ROUNDS, MAX_PLAYERS, type GameId } from '@/lib/protocol'
+import {
+  CONFESSION_MIN_PLAYERS,
+  CONFESSION_ROUNDS,
+  MAX_PLAYERS,
+  SUSCEPTIBLE_CATEGORIES,
+  type GameId,
+  type SusceptibleCategory,
+} from '@/lib/protocol'
+import { CATEGORY_LABEL } from '@/lib/susceptible'
 import { useRoomStore } from '@/stores/room'
 
 const room = useRoomStore()
@@ -11,6 +19,7 @@ const emit = defineEmits<{ leave: [] }>()
 const view = computed(() => room.view!)
 const onlineCount = computed(() => view.value.players.filter((p) => p.status === 'online').length)
 const rounds = ref(1)
+const category = ref<SusceptibleCategory>('soft')
 const shareInfo = ref<string | null>(null)
 const error = ref<string | null>(null)
 
@@ -40,7 +49,9 @@ async function share() {
 async function start(game: GameId) {
   error.value = null
   try {
-    await room.startGame(game, game === 'quiz' ? rounds.value : undefined)
+    if (game === 'quiz') await room.startGame(game, { rounds: rounds.value })
+    else if (game === 'susceptible') await room.startGame(game, { category: category.value })
+    else await room.startGame(game)
   } catch (e) {
     error.value = (e as Error).message
   }
@@ -86,6 +97,20 @@ async function start(game: GameId) {
         <div>
           <strong>Qui est le plus susceptible de… ?</strong>
           <small>Tout le monde vote, le plus désigné boit.</small>
+          <div class="categories" role="radiogroup" aria-label="Catégorie des questions">
+            <button
+              v-for="c in SUSCEPTIBLE_CATEGORIES"
+              :key="c"
+              type="button"
+              role="radio"
+              class="category"
+              :class="{ 'is-selected': category === c }"
+              :aria-checked="category === c"
+              @click="category = c"
+            >
+              {{ CATEGORY_LABEL[c] }}
+            </button>
+          </div>
         </div>
         <button type="button" class="btn" :disabled="onlineCount < 2" @click="start('susceptible')">
           Lancer
@@ -272,6 +297,32 @@ ul {
 
 .game-row .btn {
   width: auto;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.category {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background: var(--surface-3);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.category.is-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-3));
 }
 
 .rounds {
