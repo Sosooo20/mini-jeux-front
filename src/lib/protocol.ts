@@ -7,8 +7,14 @@ export const MAX_PLAYERS = 12
 export const PSEUDO_MAX_LENGTH = 20
 export const VOTE_SECONDS = 30
 export const ROOM_CODE_LENGTH = 4
+/** Confessions : temps pour écrire son secret, nombre de manches, longueur max */
+export const WRITE_SECONDS = 120
+export const CONFESSION_ROUNDS = 3
+export const CONFESSION_MAX_LENGTH = 280
+/** À 2, on n'a qu'un seul auteur possible : impossible de se tromper */
+export const CONFESSION_MIN_PLAYERS = 3
 
-export type GameId = 'susceptible' | 'quiz'
+export type GameId = 'susceptible' | 'quiz' | 'confessions'
 
 export interface PlayerView {
   id: string
@@ -80,7 +86,55 @@ export type QuizView =
       losers: string[]
     }
 
-export type GameView = SusceptibleView | QuizView
+// ---------- Confessions anonymes ----------
+
+interface ConfessionsBase {
+  id: 'confessions'
+  /** Numéro de la manche (1, 2, 3) et nombre total */
+  round: number
+  totalRounds: number
+  /** Erreurs cumulées par joueur : le plus d'erreurs boit à la fin */
+  errors: Record<string, number>
+}
+
+export interface ConfessionReveal {
+  text: string
+  author: string
+  /** Qui devait deviner cette phrase -> qui il a désigné (null = pas répondu à temps) */
+  guesses: Record<string, string | null>
+}
+
+export type ConfessionsView =
+  | (ConfessionsBase & {
+      phase: 'write'
+      deadline: number
+      /** Qui a déjà écrit (pas quoi) */
+      written: string[]
+      mine: string | null
+    })
+  | (ConfessionsBase & {
+      phase: 'guess'
+      deadline: number
+      /** La phrase à attribuer (null = pas de phrase pour moi cette manche) */
+      text: string | null
+      /** Auteurs possibles (tous ceux qui ont écrit, sauf moi) */
+      choices: string[]
+      myGuess: string | null
+      /** Qui doit deviner / qui a déjà deviné */
+      expected: string[]
+      answered: string[]
+    })
+  | (ConfessionsBase & {
+      phase: 'reveal'
+      items: ConfessionReveal[]
+    })
+  | (ConfessionsBase & {
+      phase: 'final'
+      winners: string[]
+      losers: string[]
+    })
+
+export type GameView = SusceptibleView | QuizView | ConfessionsView
 
 // ---------- Jeu photo (en parallèle des autres jeux) ----------
 
@@ -128,6 +182,8 @@ export interface ClientToServer {
   'game:stop': (ack: Ack) => void
   'vote:cast': (p: { target: string }, ack: Ack) => void
   'quiz:answer': (p: { choice: number }, ack: Ack) => void
+  'confession:write': (p: { text: string }, ack: Ack) => void
+  'confession:guess': (p: { author: string }, ack: Ack) => void
   'photo:start': (p: { target: string }, ack: Ack) => void
   'photo:finish': (ack: Ack) => void
 }

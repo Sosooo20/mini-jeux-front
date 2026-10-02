@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
 import PhotoStatus from '@/components/online/PhotoStatus.vue'
-import { MAX_PLAYERS, type GameId } from '@/lib/protocol'
+import { CONFESSION_MIN_PLAYERS, CONFESSION_ROUNDS, MAX_PLAYERS, type GameId } from '@/lib/protocol'
 import { useRoomStore } from '@/stores/room'
 
 const room = useRoomStore()
@@ -103,6 +103,23 @@ async function start(game: GameId) {
           </label>
         </div>
         <button type="button" class="btn" :disabled="onlineCount < 2" @click="start('quiz')">
+          Lancer
+        </button>
+      </div>
+      <div class="game-row">
+        <div>
+          <strong>Confessions anonymes</strong>
+          <small>
+            {{ CONFESSION_ROUNDS }} manches : écris un secret, devine qui a écrit celui qu'on te
+            donne. {{ CONFESSION_MIN_PLAYERS }} joueurs minimum.
+          </small>
+        </div>
+        <button
+          type="button"
+          class="btn"
+          :disabled="onlineCount < CONFESSION_MIN_PLAYERS"
+          @click="start('confessions')"
+        >
           Lancer
         </button>
       </div>

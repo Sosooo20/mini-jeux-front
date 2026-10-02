@@ -4,7 +4,10 @@ import { VOTE_SECONDS } from '@/lib/protocol'
 import { useRoomStore } from '@/stores/room'
 
 /** Temps restant avant l'échéance fixée par le serveur (corrigé du décalage d'horloge) */
-const props = defineProps<{ deadline: number }>()
+const props = defineProps<{
+  deadline: number
+  /** durée totale en secondes (pour la barre) */ total?: number
+}>()
 
 const room = useRoomStore()
 const now = ref(room.serverNow())
@@ -15,7 +18,7 @@ onBeforeUnmount(() => clearInterval(timer))
 
 const remaining = computed(() => Math.max(0, props.deadline - now.value))
 const seconds = computed(() => Math.ceil(remaining.value / 1000))
-const ratio = computed(() => Math.min(1, remaining.value / (VOTE_SECONDS * 1000)))
+const ratio = computed(() => Math.min(1, remaining.value / ((props.total ?? VOTE_SECONDS) * 1000)))
 </script>
 
 <template>

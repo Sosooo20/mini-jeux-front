@@ -111,6 +111,10 @@ export const useRoomStore = defineStore('room', () => {
   const stopGame = () => call((ack) => socket.emit('game:stop', ack))
   const vote = (target: string) => call((ack) => socket.emit('vote:cast', { target }, ack))
   const answer = (choice: number) => call((ack) => socket.emit('quiz:answer', { choice }, ack))
+  const writeConfession = (text: string) =>
+    call((ack) => socket.emit('confession:write', { text }, ack))
+  const guessAuthor = (author: string) =>
+    call((ack) => socket.emit('confession:guess', { author }, ack))
   const startPhotoGame = (target: string) =>
     call((ack) => socket.emit('photo:start', { target }, ack))
   const finishPhotoGame = () => call((ack) => socket.emit('photo:finish', ack))
@@ -159,6 +163,8 @@ export const useRoomStore = defineStore('room', () => {
     stopGame,
     vote,
     answer,
+    writeConfession,
+    guessAuthor,
     startPhotoGame,
     finishPhotoGame,
     uploadAvatar,

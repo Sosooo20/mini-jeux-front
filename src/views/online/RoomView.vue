@@ -6,6 +6,8 @@ import ConnectionBanner from '@/components/online/ConnectionBanner.vue'
 import LobbyPanel from '@/components/online/LobbyPanel.vue'
 import SusceptibleGame from '@/components/online/SusceptibleGame.vue'
 import QuizGame from '@/components/online/QuizGame.vue'
+import ConfessionsGame from '@/components/online/ConfessionsGame.vue'
+import { GAMES, accentStyle } from '@/lib/games'
 import { useRoomStore } from '@/stores/room'
 import { useWakeLock } from '@/composables/useWakeLock'
 
@@ -19,7 +21,30 @@ const code = computed(() => props.code.toUpperCase())
 const inThisRoom = computed(() => room.view?.code === code.value)
 const game = computed(() => (inThisRoom.value ? room.view!.game : null))
 
-const GAME_TITLES = { susceptible: 'Qui est le plus susceptible ?', quiz: 'Quiz de potes' } as const
+const GAME_TITLES = {
+  susceptible: 'Qui est le plus susceptible ?',
+  quiz: 'Quiz de potes',
+  confessions: 'Confessions anonymes',
+} as const
+
+/** Ce que fait le bouton principal de l'hôte (null = rien à faire, on attend les joueurs) */
+const nextLabel = computed(() => {
+  const g = game.value
+  if (!g) return null
+  if (g.phase === 'reveal') {
+    if (g.id === 'susceptible') return 'Question suivante'
+    if (g.id === 'confessions' && g.round >= g.totalRounds) return 'Voir les résultats'
+    return 'Manche suivante'
+  }
+  // Confessions : l'hôte peut ne pas attendre les retardataires
+  if (g.id === 'confessions' && (g.phase === 'write' || g.phase === 'guess')) {
+    return 'Passer à la suite'
+  }
+  return null
+})
+const waitingForHost = computed(
+  () => game.value?.phase === 'reveal' || game.value?.phase === 'final',
+)
 
 useWakeLock(computed(() => inThisRoom.value))
 
@@ -53,7 +78,10 @@ async function leave() {
 </script>
 
 <template>
-  <div class="game-page">
+  <div
+    class="game-page"
+    :style="game?.id === 'confessions' ? accentStyle(GAMES.confessions) : undefined"
+  >
     <PageHeader :title="game ? GAME_TITLES[game.id] : `Salon ${code}`" back />
     <ConnectionBanner />
 
@@ -65,25 +93,25 @@ async function leave() {
 
     <template v-else>
       <SusceptibleGame v-if="game.id === 'susceptible'" :game="game" />
-      <QuizGame v-else :game="game" />
+      <QuizGame v-else-if="game.id === 'quiz'" :game="game" />
+      <ConfessionsGame v-else :game="game" />
 
       <div class="host-bar">
         <template v-if="room.isHost">
           <button
-            v-if="game.phase === 'reveal'"
+            v-if="nextLabel"
             type="button"
-            class="btn btn--big"
+            class="btn"
+            :class="game.phase === 'reveal' ? 'btn--big' : 'btn--ghost'"
             @click="run(() => room.nextStep())"
           >
-            {{ game.id === 'quiz' ? 'Manche suivante' : 'Question suivante' }}
+            {{ nextLabel }}
           </button>
           <button type="button" class="btn btn--ghost" @click="run(() => room.stopGame())">
             {{ game.phase === 'final' ? 'Retour au salon' : 'Arrêter le jeu' }}
           </button>
         </template>
-        <p v-else-if="game.phase !== 'vote' && game.phase !== 'answer'" class="waiting">
-          En attente de l'hôte 👑
-        </p>
+        <p v-else-if="waitingForHost" class="waiting">En attente de l'hôte 👑</p>
       </div>
     </template>
 

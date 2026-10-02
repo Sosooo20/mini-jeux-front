@@ -38,6 +38,11 @@ const onlineGames = [
   },
   { emoji: '❓', name: 'Quiz de potes', description: 'Devine ce que tes potes ont répondu.' },
   {
+    emoji: '🤫',
+    name: 'Confessions anonymes',
+    description: 'Chacun écrit un secret, devine qui a écrit celui que tu reçois.',
+  },
+  {
     emoji: '📸',
     name: 'Jeu photo',
     description: 'Prends la cible en photo en scred, toute la soirée.',
