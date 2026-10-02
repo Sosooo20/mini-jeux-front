@@ -34,7 +34,8 @@ function joinRoom() {
       </RouterLink>
     </section>
 
-    <section class="card block">
+    <!-- Déjà dans un salon : pas de création ni de nouveau salon (ça ferait quitter l'actuel) -->
+    <section v-if="!room.view" class="card block">
       <h2>Créer un salon</h2>
       <p class="help">
         Tu deviens l'hôte : tu lances les jeux, les autres te rejoignent avec un code.
@@ -44,7 +45,7 @@ function joinRoom() {
       </RouterLink>
     </section>
 
-    <form class="card block" @submit.prevent="joinRoom">
+    <form v-if="!room.view" class="card block" @submit.prevent="joinRoom">
       <h2>Rejoindre un salon</h2>
       <label for="code" class="help">Le code à 4 lettres donné par l'hôte</label>
       <input

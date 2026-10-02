@@ -4,6 +4,7 @@ import GameShowcaseCard, { type ShowcaseGame } from '@/components/home/GameShowc
 
 import iconBolt from '@/assets/home/icon-bolt.svg'
 import iconJoin from '@/assets/home/icon-join.svg'
+import { useRoomStore } from '@/stores/room'
 import tagBombe from '@/assets/home/tag-bombe.svg'
 import tagRoulette from '@/assets/home/tag-roulette.svg'
 import tagPalmier from '@/assets/home/tag-palmier.svg'
@@ -28,6 +29,8 @@ import kickerPourrait from '@/assets/home/kicker-pourrait.svg'
 import ctaJamais from '@/assets/home/cta-jamais.svg'
 import ctaPreferes from '@/assets/home/cta-preferes.svg'
 import ctaPourrait from '@/assets/home/cta-pourrait.svg'
+
+const room = useRoomStore()
 
 /** Jeux qui se jouent dans un salon, chacun sur son téléphone */
 const onlineGames = [
@@ -184,7 +187,16 @@ const games: ShowcaseGame[] = [
           </li>
         </ul>
       </div>
-      <div class="quick-actions__grid">
+      <!-- Déjà dans un salon : on y retourne (en créer ou en rejoindre un autre le ferait quitter) -->
+      <div v-if="room.view" class="quick-actions__grid">
+        <RouterLink
+          :to="{ name: 'room', params: { code: room.view.code } }"
+          class="qa-btn qa-btn--primary qa-btn--full"
+        >
+          Retourner au salon {{ room.view.code }}
+        </RouterLink>
+      </div>
+      <div v-else class="quick-actions__grid">
         <RouterLink
           :to="{ name: 'room-profile', query: { creer: '1' } }"
           class="qa-btn qa-btn--primary"
@@ -361,6 +373,10 @@ const games: ShowcaseGame[] = [
 
 .qa-btn:active {
   transform: scale(0.97);
+}
+
+.qa-btn--full {
+  grid-column: 1 / -1 !important;
 }
 
 .qa-btn--primary {

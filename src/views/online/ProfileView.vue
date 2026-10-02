@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
@@ -33,6 +33,15 @@ onMounted(() => {
   room.connect()
   if (!creating.value && !editing.value && !code.value) router.replace({ name: 'online' })
 })
+
+// Déjà dans un salon : pas de création d'un nouveau, on y retourne
+watch(
+  () => room.view?.code,
+  (current) => {
+    if (current && creating.value) router.replace({ name: 'room', params: { code: current } })
+  },
+  { immediate: true },
+)
 
 async function pickImage(event: Event) {
   const input = event.target as HTMLInputElement
