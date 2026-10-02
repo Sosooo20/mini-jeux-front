@@ -29,6 +29,21 @@ import ctaJamais from '@/assets/home/cta-jamais.svg'
 import ctaPreferes from '@/assets/home/cta-preferes.svg'
 import ctaPourrait from '@/assets/home/cta-pourrait.svg'
 
+/** Jeux qui se jouent dans un salon, chacun sur son téléphone */
+const onlineGames = [
+  {
+    emoji: '👉',
+    name: 'Qui est le plus susceptible de… ?',
+    description: 'Chacun vote en secret, le plus désigné boit.',
+  },
+  { emoji: '❓', name: 'Quiz de potes', description: 'Devine ce que tes potes ont répondu.' },
+  {
+    emoji: '📸',
+    name: 'Jeu photo',
+    description: 'Prends la cible en photo en scred, toute la soirée.',
+  },
+]
+
 const games: ShowcaseGame[] = [
   {
     routeName: 'bombe',
@@ -149,6 +164,21 @@ const games: ShowcaseGame[] = [
     <section class="quick-actions">
       <div class="quick-actions__glow quick-actions__glow--violet" />
       <div class="quick-actions__glow quick-actions__glow--green" />
+      <div class="online">
+        <div class="online__head">
+          <h2><span class="online__bar" />Jeux en ligne</h2>
+          <span class="online__badge">Chacun son tél</span>
+        </div>
+        <ul class="online__list">
+          <li v-for="g in onlineGames" :key="g.name">
+            <span class="online__emoji" aria-hidden="true">{{ g.emoji }}</span>
+            <span>
+              <strong>{{ g.name }}</strong>
+              <small>{{ g.description }}</small>
+            </span>
+          </li>
+        </ul>
+      </div>
       <div class="quick-actions__grid">
         <RouterLink
           :to="{ name: 'room-profile', query: { creer: '1' } }"
@@ -210,6 +240,97 @@ const games: ShowcaseGame[] = [
   bottom: -48px;
   left: -48px;
   background: rgba(0, 185, 84, 0.2);
+}
+
+/* Liste des jeux en ligne, au-dessus des boutons de salon */
+.online {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 4px 16px;
+}
+
+.online__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.online__head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.55px;
+  color: #dae2fd;
+}
+
+.online__bar {
+  width: 10px;
+  height: 24px;
+  border-radius: 9999px;
+  background: #c0c1ff;
+}
+
+.online__badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(192, 193, 255, 0.12);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.88px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #c0c1ff;
+}
+
+.online__list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.online__list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 24px;
+  background: rgba(34, 42, 61, 0.8);
+}
+
+.online__emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.online__list strong,
+.online__list small {
+  display: block;
+}
+
+.online__list strong {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 20px;
+  color: #dae2fd;
+}
+
+.online__list small {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: #c7c4d7;
 }
 
 .quick-actions__grid {
