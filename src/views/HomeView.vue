@@ -119,7 +119,7 @@ const games: ShowcaseGame[] = [
     titleStart: 'Confessions',
     titleAccent: 'anonymes',
     description:
-      "Chacun écrit un secret ou une anecdote secrète sur son tour. L'appli mélange tout anonymement : saurez-vous deviner qui a écrit quoi ?",
+      "Chacun écrit un secret ou une anecdote, puis débat : qui a pu écrire ça ? Mentez pour semer les autres, démasqué = tu bois !",
     players: '3-12 Joueurs',
     cta: { label: 'Confesser', icon: ctaConfessions },
   },
