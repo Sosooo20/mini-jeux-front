@@ -9,6 +9,11 @@ import { vibrate } from '@/composables/useVibrate'
 const props = defineProps<{ game: SusceptibleView }>()
 const room = useRoomStore()
 const error = ref<string | null>(null)
+const sending = ref(false)
+/** Pas de changement d'avis : une fois voté (ou pendant l'envoi), les choix sont verrouillés */
+const locked = computed(
+  () => sending.value || (props.game.phase === 'vote' && props.game.myVote !== null),
+)
 
 const players = computed(() => room.view?.players ?? [])
 /** On peut voter pour tous les joueurs encore présents, soi compris */
@@ -27,11 +32,15 @@ const tally = computed(() => {
 
 async function vote(target: string) {
   error.value = null
+  if (locked.value) return
+  sending.value = true
   vibrate(30)
   try {
     await room.vote(target)
   } catch (e) {
     error.value = (e as Error).message
+  } finally {
+    sending.value = false
   }
 }
 </script>
@@ -51,6 +60,7 @@ async function vote(target: string) {
         type="button"
         class="choice"
         :class="{ selected: game.myVote === p.id }"
+        :disabled="locked"
         @click="vote(p.id)"
       >
         <PlayerAvatar :name="p.pseudo" :src="p.avatarUrl" :size="48" />
@@ -59,7 +69,8 @@ async function vote(target: string) {
     </div>
     <p class="voted">
       {{ game.voted.length }}/{{ voters.length }} ont voté
-      <span v-if="game.myVote"> · tu peux encore changer d'avis</span>
+      <span v-if="game.myVote"> · ton vote est enregistré ✓</span>
+      <span v-else> · pas de retour en arrière !</span>
     </p>
   </template>
 
@@ -122,9 +133,15 @@ async function vote(target: string) {
   touch-action: manipulation;
 }
 
+.choice:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 .choice.selected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  opacity: 1;
 }
 
 .voted {
