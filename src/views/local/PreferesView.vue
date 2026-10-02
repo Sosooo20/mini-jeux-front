@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
-import CountdownOverlay from '@/components/CountdownOverlay.vue'
 import { GAMES, accentStyle } from '@/lib/games'
 import { DILEMMAS } from '@/lib/data/preferes'
 import { useDeck } from '@/composables/useDeck'
@@ -11,22 +10,24 @@ const game = GAMES.preferes
 
 const { current, next } = useDeck(DILEMMAS)
 
-/** question → compte à rebours → vote fait (rappel de la règle) */
-const step = ref<'question' | 'countdown' | 'voted'>('question')
+/** Page d'accueil du jeu (règles), puis les dilemmes les uns après les autres */
+const started = ref(false)
 
-useWakeLock(computed(() => true))
-
-function nextDilemma() {
-  next()
-  step.value = 'question'
-}
+useWakeLock(started)
 </script>
 
 <template>
   <div class="game-page" :style="accentStyle(game)">
     <PageHeader :title="game.name" back />
 
-    <Transition name="flip" mode="out-in">
+    <section v-if="!started" class="card intro">
+      <p class="intro__emoji" aria-hidden="true">⚖️</p>
+      <p>Deux choix s'affichent : chacun vote à main levée, en pointant 👈 ou 👉.</p>
+      <p class="intro__rule">🍺 La minorité boit</p>
+      <p class="intro__small">Égalité : tout le monde débat !</p>
+    </section>
+
+    <Transition v-else name="flip" mode="out-in">
       <section :key="current.a" class="dilemma" aria-live="polite">
         <div class="card choice choice--a">
           <span class="choice__side" aria-hidden="true">👈</span>
@@ -40,25 +41,17 @@ function nextDilemma() {
       </section>
     </Transition>
 
-    <p v-if="step === 'voted'" class="rule">
+    <p v-if="started" class="rule">
       🍺 La minorité boit<br />
       <small>Égalité : tout le monde débat !</small>
     </p>
 
     <div class="actions">
-      <button
-        v-if="step !== 'voted'"
-        type="button"
-        class="btn btn--big"
-        :disabled="step === 'countdown'"
-        @click="step = 'countdown'"
-      >
-        3, 2, 1… votez !
+      <button v-if="!started" type="button" class="btn btn--big" @click="started = true">
+        Première question
       </button>
-      <button v-else type="button" class="btn btn--big" @click="nextDilemma">Suivant</button>
+      <button v-else type="button" class="btn btn--big" @click="next">Suivant</button>
     </div>
-
-    <CountdownOverlay v-if="step === 'countdown'" go="Votez !" @done="step = 'voted'" />
   </div>
 </template>
 
@@ -120,6 +113,35 @@ function nextDilemma() {
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--on-accent);
+}
+
+.intro {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 17px;
+  border: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.intro__emoji {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.intro__rule {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--accent);
+}
+
+.intro__small {
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .rule {
