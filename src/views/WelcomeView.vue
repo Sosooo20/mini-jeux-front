@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import logo from '@/assets/home/logo.png'
+import { APP_LOGO, APP_NAME } from '@/lib/app'
 import { PSEUDO_MAX_LENGTH, useUserStore } from '@/stores/user'
 import { usePwaInstall } from '@/composables/usePwaInstall'
 
@@ -23,7 +23,10 @@ function submit() {
     <div class="welcome__glow welcome__glow--violet" />
     <div class="welcome__glow welcome__glow--green" />
 
-    <img :src="logo" alt="" width="72" height="72" class="welcome__logo" />
+    <div class="welcome__brand">
+      <img :src="APP_LOGO" alt="" width="112" height="112" class="welcome__logo" />
+      <h1>{{ APP_NAME }}</h1>
+    </div>
 
     <form class="welcome__form" @submit.prevent="submit">
       <label for="pseudo">Ton pseudo</label>
@@ -83,8 +86,22 @@ function submit() {
   background: rgba(0, 185, 84, 0.2);
 }
 
+.welcome__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
 .welcome__logo {
-  border-radius: 20px;
+  border-radius: 28px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.welcome__brand h1 {
+  font-size: 34px;
+  line-height: 40px;
+  letter-spacing: -1px;
 }
 
 .welcome__form {

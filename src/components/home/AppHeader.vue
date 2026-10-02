@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import logo from '@/assets/home/logo.png'
+import { APP_LOGO, APP_NAME } from '@/lib/app'
 import { useUserStore } from '@/stores/user'
 
 const user = useUserStore()
@@ -7,8 +7,10 @@ const user = useUserStore()
 
 <template>
   <header class="app-header">
-    <!-- Nom de l'appli à venir -->
-    <img :src="logo" alt="" width="32" height="32" />
+    <div class="brand">
+      <img :src="APP_LOGO" alt="" width="36" height="36" />
+      <strong>{{ APP_NAME }}</strong>
+    </div>
     <RouterLink
       :to="{ name: 'welcome' }"
       class="profile"
@@ -36,6 +38,25 @@ const user = useUserStore()
   background: rgba(11, 19, 38, 0.8);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand img {
+  border-radius: 10px;
+}
+
+.brand strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: -0.5px;
+  color: var(--text);
 }
 
 .profile {

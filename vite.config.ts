@@ -15,10 +15,10 @@ export default defineConfig({
     VitePWA({
       // Le service worker se met à jour tout seul à la prochaine ouverture
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Mini-jeux entre amis',
-        short_name: 'Mini-jeux',
+        name: 'La décadence',
+        short_name: 'La décadence',
         description: 'Des mini-jeux à boire à faire entre potes, sur un ou plusieurs téléphones.',
         lang: 'fr',
         start_url: '/',
