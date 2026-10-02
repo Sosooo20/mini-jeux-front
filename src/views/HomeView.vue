@@ -2,9 +2,8 @@
 import AppHeader from '@/components/home/AppHeader.vue'
 import GameShowcaseCard, { type ShowcaseGame } from '@/components/home/GameShowcaseCard.vue'
 
-// Désactivés tant qu'il n'y a pas de jeux en ligne (voir le template)
-// import iconBolt from '@/assets/home/icon-bolt.svg'
-// import iconJoin from '@/assets/home/icon-join.svg'
+import iconBolt from '@/assets/home/icon-bolt.svg'
+import iconJoin from '@/assets/home/icon-join.svg'
 import tagBombe from '@/assets/home/tag-bombe.svg'
 import tagRoulette from '@/assets/home/tag-roulette.svg'
 import tagPalmier from '@/assets/home/tag-palmier.svg'
@@ -147,12 +146,14 @@ const games: ShowcaseGame[] = [
   <AppHeader />
 
   <main class="home">
-    <!-- Désactivé tant qu'il n'y a pas de jeux en ligne
     <section class="quick-actions">
       <div class="quick-actions__glow quick-actions__glow--violet" />
       <div class="quick-actions__glow quick-actions__glow--green" />
       <div class="quick-actions__grid">
-        <RouterLink :to="{ name: 'online' }" class="qa-btn qa-btn--primary">
+        <RouterLink
+          :to="{ name: 'room-profile', query: { creer: '1' } }"
+          class="qa-btn qa-btn--primary"
+        >
           <img :src="iconBolt" alt="" />
           Créer un salon
         </RouterLink>
@@ -162,7 +163,6 @@ const games: ShowcaseGame[] = [
         </RouterLink>
       </div>
     </section>
-    -->
 
     <section class="games">
       <div class="games__head">

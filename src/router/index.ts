@@ -76,7 +76,24 @@ const router = createRouter({
         },
       ],
     },
-    { path: '/online', name: 'online', component: () => import('../views/online/OnlineView.vue') },
+    {
+      path: '/salon',
+      children: [
+        { path: '', name: 'online', component: () => import('../views/online/OnlineView.vue') },
+        {
+          path: 'profil',
+          name: 'room-profile',
+          component: () => import('../views/online/ProfileView.vue'),
+        },
+        {
+          // Lien d'invitation : …/salon/KBZT
+          path: ':code([A-Za-z]{4})',
+          name: 'room',
+          component: () => import('../views/online/RoomView.vue'),
+          props: true,
+        },
+      ],
+    },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })

@@ -2,19 +2,22 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNavigationStore } from '@/stores/navigation'
+import { useRoomStore } from '@/stores/room'
 
-// Onglets désactivés pour l'instant (pas de jeux en ligne)
-// import navRoom from '@/assets/home/nav-room.svg'
+// Onglets désactivés pour l'instant (pas de page dédiée)
 // import navRanking from '@/assets/home/nav-ranking.svg'
 // import navProfile from '@/assets/home/nav-profile.svg'
-// { label: 'Salon', icon: navRoom, to: { name: 'online' } },
 // { label: 'Classement', icon: navRanking },
 // { label: 'Profil', icon: navProfile },
 
 const route = useRoute()
 const navigation = useNavigationStore()
+const room = useRoomStore()
 
 const onCamera = computed(() => route.name === 'camera')
+/** L'onglet Salon n'apparaît que quand on est dans un salon */
+const roomCode = computed(() => room.view?.code ?? null)
+const onRoom = computed(() => route.path.startsWith('/salon'))
 
 // Depuis l'appareil photo, « Accueil » ramène à la partie en cours s'il y en a une
 const homeTarget = computed(() =>
@@ -24,7 +27,7 @@ const homeTarget = computed(() =>
 
 <template>
   <nav class="bottom-nav">
-    <RouterLink :to="homeTarget" class="nav-item" :class="{ active: !onCamera }">
+    <RouterLink :to="homeTarget" class="nav-item" :class="{ active: !onCamera && !onRoom }">
       <span class="nav-icon">
         <svg width="22" height="16" viewBox="0 0 19.97 14" aria-hidden="true">
           <path
@@ -34,6 +37,33 @@ const homeTarget = computed(() =>
         </svg>
       </span>
       <span>Accueil</span>
+    </RouterLink>
+
+    <RouterLink
+      v-if="roomCode"
+      :to="{ name: 'room', params: { code: roomCode } }"
+      class="nav-item"
+      :class="{ active: onRoom }"
+    >
+      <span class="nav-icon">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.9" />
+          <path d="M16 3.1a4 4 0 0 1 0 7.8" />
+        </svg>
+      </span>
+      <span>Salon</span>
     </RouterLink>
 
     <RouterLink :to="{ name: 'camera' }" class="nav-item" :class="{ active: onCamera }">

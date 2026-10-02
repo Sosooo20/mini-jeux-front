@@ -16,7 +16,10 @@ const user = useUserStore()
       class="profile"
       :aria-label="`Profil de ${user.pseudo} (changer de pseudo)`"
     >
-      <span class="avatar">{{ user.initial }}</span>
+      <span class="avatar">
+        <img v-if="user.avatar" :src="user.avatar" alt="" />
+        <template v-else>{{ user.initial }}</template>
+      </span>
     </RouterLink>
   </header>
 </template>
@@ -83,5 +86,12 @@ const user = useUserStore()
   font-weight: 700;
   font-size: 15px;
   color: #c0c1ff;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

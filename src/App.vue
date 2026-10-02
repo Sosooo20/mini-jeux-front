@@ -2,9 +2,14 @@
 import { RouterView, useRoute } from 'vue-router'
 import BottomNav from '@/components/home/BottomNav.vue'
 import { useNavigationStore } from '@/stores/navigation'
+import { useRoomStore } from '@/stores/room'
 
 const route = useRoute()
 const navigation = useNavigationStore()
+
+// Si on était dans un salon, on s'y reconnecte dès l'ouverture (jeu photo, onglet Salon…)
+const room = useRoomStore()
+if (room.lastRoom()) room.connect()
 </script>
 
 <template>

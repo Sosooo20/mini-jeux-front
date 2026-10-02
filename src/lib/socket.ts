@@ -1,6 +1,8 @@
 import { io, type Socket } from 'socket.io-client'
+import type { ClientToServer, ServerToClient } from '@/lib/protocol'
+import { playerKey, readItem, writeItem } from '@/lib/storage'
 
-const PLAYER_ID_KEY = 'mini-jeux:player-id'
+const PLAYER_ID_KEY = playerKey('mini-jeux:player-id')
 
 /**
  * Identifiant aléatoire (format UUID v4).
@@ -21,26 +23,19 @@ function randomId(): string {
  * après un verrouillage du téléphone ou une coupure réseau.
  */
 export function getPlayerId(): string {
-  let id: string | null = null
-  try {
-    id = localStorage.getItem(PLAYER_ID_KEY)
-  } catch {
-    /* stockage indisponible */
-  }
+  let id = readItem(PLAYER_ID_KEY)
   if (!id) {
     id = randomId()
-    try {
-      localStorage.setItem(PLAYER_ID_KEY, id)
-    } catch {
-      /* stockage indisponible : identifiant valable pour cette session seulement */
-    }
+    writeItem(PLAYER_ID_KEY, id)
   }
   return id
 }
 
-let socket: Socket | null = null
+export type GameSocket = Socket<ServerToClient, ClientToServer>
 
-export function useSocket(): Socket {
+let socket: GameSocket | null = null
+
+export function useSocket(): GameSocket {
   if (!socket) {
     socket = io({ auth: { playerId: getPlayerId() }, autoConnect: false })
   }

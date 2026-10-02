@@ -1,0 +1,142 @@
+// ⚠️ Copie générée depuis back/src/protocol.ts (npm run sync-protocol) : ne pas modifier ici.
+// Contrat de messages entre le serveur et les téléphones.
+// Source de vérité : back/src/protocol.ts. Copié vers front/src/lib/protocol.ts
+// avec `npm run sync-protocol` (dans back/) : ne pas modifier la copie du front.
+
+export const MAX_PLAYERS = 12
+export const PSEUDO_MAX_LENGTH = 20
+export const VOTE_SECONDS = 30
+export const ROOM_CODE_LENGTH = 4
+
+export type GameId = 'susceptible' | 'quiz'
+
+export interface PlayerView {
+  id: string
+  pseudo: string
+  /** Adresse de la photo de profil (null = rond avec l'initiale) */
+  avatarUrl: string | null
+  /** online = connecté · paused = déconnecté depuis moins de 60 s · away = absent */
+  status: 'online' | 'paused' | 'away'
+  isHost: boolean
+}
+
+// ---------- Qui est le plus susceptible de… ? ----------
+
+export type SusceptibleView =
+  | {
+      id: 'susceptible'
+      phase: 'vote'
+      question: string
+      deadline: number
+      /** Qui a déjà voté (pas pour qui) */
+      voted: string[]
+      myVote: string | null
+    }
+  | {
+      id: 'susceptible'
+      phase: 'reveal'
+      question: string
+      /** votant -> désigné */
+      votes: Record<string, string>
+      /** Le ou les plus désignés : ils boivent */
+      losers: string[]
+    }
+
+// ---------- Quiz de potes ----------
+
+export interface QuizRound {
+  /** Numéro de la manche (1, 2…) et nombre total */
+  round: number
+  totalRounds: number
+  targetId: string
+  question: string
+  choices: string[]
+}
+
+export type QuizView =
+  | (QuizRound & {
+      id: 'quiz'
+      phase: 'answer'
+      deadline: number
+      /** Qui a déjà répondu (pas quoi) */
+      answered: string[]
+      myAnswer: number | null
+      scores: Record<string, number>
+    })
+  | (QuizRound & {
+      id: 'quiz'
+      phase: 'reveal'
+      /** Réponse de la cible (null = elle n'a pas répondu à temps) */
+      correct: number | null
+      /** joueur -> réponse choisie */
+      answers: Record<string, number>
+      scores: Record<string, number>
+    })
+  | {
+      id: 'quiz'
+      phase: 'final'
+      scores: Record<string, number>
+      winners: string[]
+      losers: string[]
+    }
+
+export type GameView = SusceptibleView | QuizView
+
+// ---------- Jeu photo (en parallèle des autres jeux) ----------
+
+export interface PhotoView {
+  id: string
+  by: string
+  url: string
+  at: number
+}
+
+export interface PhotoGameView {
+  targetId: string
+  photos: PhotoView[]
+  /** Nombre de photos par photographe (la cible n'en fait pas partie) */
+  counts: Record<string, number>
+  /** Rempli quand l'hôte a terminé le jeu */
+  result: { winners: string[]; losers: string[] } | null
+}
+
+// ---------- Salon ----------
+
+/** Ce qu'un joueur voit du salon : construit par le serveur pour CE joueur */
+export interface RoomView {
+  code: string
+  me: string
+  players: PlayerView[]
+  game: GameView | null
+  photo: PhotoGameView | null
+  /** Heure du serveur, pour corriger le décalage d'horloge du téléphone */
+  serverNow: number
+}
+
+// ---------- Messages ----------
+
+export type AckResult<T = null> = { ok: true; data: T } | { ok: false; error: string }
+export type Ack<T = null> = (res: AckResult<T>) => void
+
+export interface ClientToServer {
+  'room:create': (p: { pseudo: string }, ack: Ack<{ code: string }>) => void
+  'room:join': (p: { code: string; pseudo: string }, ack: Ack) => void
+  'room:leave': (ack: Ack) => void
+  'player:update': (p: { pseudo: string }, ack: Ack) => void
+  'game:start': (p: { game: GameId; rounds?: number }, ack: Ack) => void
+  'game:next': (ack: Ack) => void
+  'game:stop': (ack: Ack) => void
+  'vote:cast': (p: { target: string }, ack: Ack) => void
+  'quiz:answer': (p: { choice: number }, ack: Ack) => void
+  'photo:start': (p: { target: string }, ack: Ack) => void
+  'photo:finish': (ack: Ack) => void
+}
+
+export interface ServerToClient {
+  /** Envoyé à la connexion : le salon où l'on était (reconnexion), ou null */
+  session: (view: RoomView | null) => void
+  'room:state': (view: RoomView) => void
+}
+
+/** En-tête HTTP qui identifie le joueur pour l'envoi de photos */
+export const PLAYER_HEADER = 'x-player-id'

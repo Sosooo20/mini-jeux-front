@@ -44,7 +44,7 @@ export default defineConfig({
         // Jeux locaux jouables hors ligne : tout le front est mis en cache
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg,woff2,mp3,ogg,wav}'],
         // Le temps réel et l'API ne doivent jamais passer par le cache
-        navigateFallbackDenylist: [/^\/socket\.io/, /^\/health/],
+        navigateFallbackDenylist: [/^\/socket\.io/, /^\/health/, /^\/rooms\//],
       },
       devOptions: {
         // Passer à true pour tester le service worker avec `npm run dev`
@@ -63,6 +63,7 @@ export default defineConfig({
     proxy: {
       '/socket.io': { target: 'http://localhost:3000', ws: true },
       '/health': 'http://localhost:3000',
+      '/rooms': 'http://localhost:3000',
     },
   },
 })
