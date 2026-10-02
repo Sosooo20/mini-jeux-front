@@ -20,6 +20,15 @@ import ctaRoulette from '@/assets/home/cta-roulette.svg'
 import ctaPalmier from '@/assets/home/cta-palmier.svg'
 import ctaChrono from '@/assets/home/cta-chrono.svg'
 import ctaConfessions from '@/assets/home/cta-confessions.svg'
+import tagJamais from '@/assets/home/tag-jamais.svg'
+import tagPreferes from '@/assets/home/tag-preferes.svg'
+import tagPourrait from '@/assets/home/tag-pourrait.svg'
+import kickerJamais from '@/assets/home/kicker-jamais.svg'
+import kickerPreferes from '@/assets/home/kicker-preferes.svg'
+import kickerPourrait from '@/assets/home/kicker-pourrait.svg'
+import ctaJamais from '@/assets/home/cta-jamais.svg'
+import ctaPreferes from '@/assets/home/cta-preferes.svg'
+import ctaPourrait from '@/assets/home/cta-pourrait.svg'
 
 const games: ShowcaseGame[] = [
   {
@@ -91,6 +100,45 @@ const games: ShowcaseGame[] = [
       "Chacun écrit un secret ou une anecdote secrète sur son tour. L'appli mélange tout anonymement : saurez-vous deviner qui a écrit quoi ?",
     players: '3-12 Joueurs',
     cta: { label: 'Confesser', icon: ctaConfessions },
+  },
+  {
+    routeName: 'jamais',
+    accent: '#ffd166',
+    onAccent: '#3d2e00',
+    glow: 'rgba(255, 209, 102, 0.25)',
+    tag: { icon: tagJamais, label: 'Classique de soirée' },
+    kicker: { icon: kickerJamais, label: 'Avoue tout' },
+    titleStart: "J'ai déjà /",
+    titleAccent: "Je n'ai jamais",
+    description:
+      "Une phrase s'affiche : selon la carte, ceux qui l'ont déjà fait, ou ceux qui ne l'ont jamais fait, boivent. Interdit de mentir !",
+    cta: { label: 'Piocher', icon: ctaJamais },
+  },
+  {
+    routeName: 'preferes',
+    accent: '#ff9f5a',
+    onAccent: '#3d1a00',
+    glow: 'rgba(255, 159, 90, 0.25)',
+    tag: { icon: tagPreferes, label: 'Dilemmes' },
+    kicker: { icon: kickerPreferes, label: 'Choisis ton camp' },
+    titleStart: 'Tu',
+    titleAccent: 'préfères…',
+    description:
+      'Deux choix, un vote à main levée : la minorité boit. Égalité ? Débat obligatoire.',
+    cta: { label: 'Choisir', icon: ctaPreferes },
+  },
+  {
+    routeName: 'pourrait',
+    accent: '#c792ff',
+    onAccent: '#2e0059',
+    glow: 'rgba(199, 146, 255, 0.25)',
+    tag: { icon: tagPourrait, label: 'Débats garantis' },
+    kicker: { icon: kickerPourrait, label: 'Pointez du doigt' },
+    titleStart: 'Qui',
+    titleAccent: 'pourrait…',
+    description:
+      "Une mise en situation, tout le monde pointe quelqu'un en même temps : le plus désigné boit.",
+    cta: { label: 'Pointer', icon: ctaPourrait },
   },
 ]
 </script>

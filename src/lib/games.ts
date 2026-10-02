@@ -33,6 +33,25 @@ export const GAMES = {
     onAccent: '#570032',
     minPlayers: 3,
   },
+  // Jeux « cartes » : pas d'écran Joueurs, chacun boit de lui-même
+  jamais: {
+    name: "J'ai déjà / Je n'ai jamais",
+    accent: '#ffd166',
+    onAccent: '#3d2e00',
+    minPlayers: 0,
+  },
+  preferes: {
+    name: 'Tu préfères…',
+    accent: '#ff9f5a',
+    onAccent: '#3d1a00',
+    minPlayers: 0,
+  },
+  pourrait: {
+    name: 'Qui pourrait…',
+    accent: '#c792ff',
+    onAccent: '#2e0059',
+    minPlayers: 0,
+  },
 } satisfies Record<string, LocalGame>
 
 /** Variables CSS à poser sur la page d'un jeu */
