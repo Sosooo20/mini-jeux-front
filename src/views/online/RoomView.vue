@@ -22,6 +22,8 @@ const leaving = ref(false)
 const code = computed(() => props.code.toUpperCase())
 const inThisRoom = computed(() => room.view?.code === code.value)
 const game = computed(() => (inThisRoom.value ? room.view!.game : null))
+/** On était dans ce salon, mais le serveur ne le connaît plus */
+const lost = computed(() => !inThisRoom.value && room.lostRoom === code.value)
 
 const GAME_TITLES = {
   susceptible: 'Qui est le plus susceptible ?',
@@ -70,10 +72,11 @@ useWakeLock(computed(() => inThisRoom.value))
 onMounted(() => room.connect())
 
 // Le serveur dit qu'on n'est pas (ou plus) dans ce salon : on passe par l'écran profil pour y entrer
+// (sauf si le salon a disparu : on l'explique sur place)
 watch(
   () => [room.sessionReady, inThisRoom.value] as const,
   ([ready, inside]) => {
-    if (ready && !inside && !leaving.value)
+    if (ready && !inside && !leaving.value && !lost.value)
       router.replace({ name: 'room-profile', query: { code: code.value } })
   },
   { immediate: true },
@@ -104,7 +107,22 @@ async function leave() {
     <PageHeader :title="game ? GAME_TITLES[game.id] : `Salon ${code}`" back />
     <ConnectionBanner />
 
-    <p v-if="!inThisRoom" class="waiting">Connexion au salon…</p>
+    <section v-if="lost" class="card lost">
+      <p class="lost__emoji" aria-hidden="true">😵</p>
+      <h2>Ce salon n'existe plus</h2>
+      <p class="lost__text">
+        Le serveur a redémarré (mise à jour ou coupure), ou le salon est resté vide trop longtemps.
+        La partie en cours est perdue, désolé !
+      </p>
+      <RouterLink :to="{ name: 'room-profile', query: { creer: '1' } }" class="btn btn--big">
+        Créer un nouveau salon
+      </RouterLink>
+      <RouterLink :to="{ name: 'online' }" class="btn btn--ghost"
+        >Rejoindre un autre salon</RouterLink
+      >
+    </section>
+
+    <p v-else-if="!inThisRoom" class="waiting">Connexion au salon…</p>
 
     <template v-else-if="!game">
       <LobbyPanel @leave="leave" />
@@ -143,6 +161,27 @@ async function leave() {
 </template>
 
 <style scoped>
+.lost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.lost__emoji {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.lost__text {
+  color: var(--muted);
+}
+
+.lost .btn {
+  width: 100%;
+}
+
 .waiting {
   text-align: center;
   font-size: 14px;

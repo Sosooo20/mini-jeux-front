@@ -26,6 +26,11 @@ export const useRoomStore = defineStore('room', () => {
   const status = ref<'idle' | 'connecting' | 'connected' | 'disconnected'>('idle')
   /** true dès que le serveur a dit dans quel salon on est (ou aucun) après la connexion */
   const sessionReady = ref(false)
+  /**
+   * Salon où on était et que le serveur ne connaît plus (redémarrage du serveur, ou salon
+   * resté vide trop longtemps) : on l'explique au lieu de renvoyer vers « rejoindre ».
+   */
+  const lostRoom = ref<string | null>(null)
   /** Décalage entre l'horloge du serveur et celle du téléphone */
   const clockOffset = ref(0)
   let started = false
@@ -39,6 +44,7 @@ export const useRoomStore = defineStore('room', () => {
   function setView(next: RoomView | null) {
     view.value = next
     if (next) {
+      lostRoom.value = null
       clockOffset.value = next.serverNow - Date.now()
       writeItem(LAST_ROOM_KEY, next.code)
     }
@@ -57,6 +63,9 @@ export const useRoomStore = defineStore('room', () => {
     })
     socket.on('connect_error', () => (status.value = 'disconnected'))
     socket.on('session', (v) => {
+      // Le téléphone se croyait dans un salon, le serveur ne le connaît pas : il a disparu
+      const last = lastRoom()
+      if (!v && last) lostRoom.value = last
       setView(v)
       if (!v) writeItem(LAST_ROOM_KEY, null)
       sessionReady.value = true
@@ -164,6 +173,7 @@ export const useRoomStore = defineStore('room', () => {
     view,
     status,
     sessionReady,
+    lostRoom,
     me,
     isHost,
     lastRoom,
