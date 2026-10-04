@@ -40,6 +40,7 @@ export type SusceptibleCategory = SusceptibleLevel | 'mix'
 export const SUSCEPTIBLE_CATEGORIES: SusceptibleCategory[] = ['soft', 'spicy', 'mix']
 
 export interface PlayerView {
+  /** Identifiant public (empreinte du jeton secret, qui lui n'est jamais envoyé) */
   id: string
   pseudo: string
   /** Adresse de la photo de profil (null = rond avec l'initiale) */
@@ -306,5 +307,5 @@ export interface ServerToClient {
   'room:state': (view: RoomView) => void
 }
 
-/** En-tête HTTP qui identifie le joueur pour l'envoi de photos */
+/** En-tête HTTP qui porte le jeton secret du joueur pour l'envoi de photos */
 export const PLAYER_HEADER = 'x-player-id'
