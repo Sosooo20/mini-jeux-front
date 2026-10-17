@@ -53,7 +53,7 @@ const onlineGames = [
   {
     emoji: '📖',
     name: 'Le dico des potes',
-    description: 'Invente une fausse définition crédible, trouve la vraie.',
+    description: 'Un mot rare : devine sa définition, débattez, la vraie tombe à la fin.',
   },
   {
     emoji: '📸',

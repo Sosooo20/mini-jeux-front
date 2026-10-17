@@ -41,8 +41,8 @@ async function submit() {
         v-model="draft"
         rows="4"
         :maxlength="DICO_MAX_LENGTH"
-        placeholder="Une définition qui sonne vrai…"
-        aria-label="Ta fausse définition"
+        placeholder="D'après toi, ça veut dire…"
+        aria-label="Ta définition"
       />
       <span class="counter">{{ draft.length }}/{{ DICO_MAX_LENGTH }}</span>
       <p v-if="error" class="error" role="alert">{{ error }}</p>

@@ -9,9 +9,7 @@ defineProps<{ game: Extract<DicoView, { phase: 'word' }> }>()
   <section class="card word">
     <p class="label">Le mot</p>
     <p class="word__text">{{ game.word }}</p>
-    <p class="word__hint">
-      Ça veut dire quoi, d'après toi ? Prépare une fausse définition crédible…
-    </p>
+    <p class="word__hint">Ça veut dire quoi, d'après toi ? Prépare ta définition…</p>
     <DeadlineBar :deadline="game.deadline" :total="DICO_WORD_SECONDS" />
   </section>
 </template>

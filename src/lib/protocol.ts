@@ -26,11 +26,8 @@ export const FASTEST_MIN_REACTION_MS = 80
 /** Dico des potes : lecture du mot, écriture, vote, longueur max, manches */
 export const DICO_WORD_SECONDS = 5
 export const DICO_WRITE_SECONDS = 45
-export const DICO_VOTE_SECONDS = 30
 export const DICO_MAX_LENGTH = 140
-export const DICO_MIN_PLAYERS = 3
-export const DICO_DEFAULT_ROUNDS = 5
-export const DICO_MAX_ROUNDS = 10
+export const DICO_MIN_PLAYERS = 2
 
 export type GameId = 'susceptible' | 'quiz' | 'confessions' | 'fastest' | 'dico'
 
@@ -211,9 +208,8 @@ export type FastestView =
 
 interface DicoRound {
   id: 'dico'
-  /** Manche en cours (1, 2…) et nombre total */
+  /** Numéro du mot (1, 2…) : on enchaîne jusqu'à ce que l'hôte arrête */
   round: number
-  rounds: number
   word: string
   category: Category
   level: Level
@@ -229,22 +225,17 @@ export type DicoView =
       mine: string | null
     })
   | (DicoRound & {
-      phase: 'voting'
-      deadline: number
-      /** Mélangées, avec la vraie, JAMAIS d'auteur ici (mine : la sienne, qu'on ne peut pas choisir) */
+      /** Le groupe débat : quelle définition est la plus proche ? */
+      phase: 'debate'
+      /** Les définitions écrites, mélangées : NI auteur, NI vraie définition (mine : la sienne) */
       definitions: { id: string; text: string; mine: boolean }[]
-      voted: string[]
-      myVote: string | null
     })
   | (DicoRound & {
       phase: 'reveal'
-      /** authorId null = la vraie définition */
-      definitions: { id: string; text: string; authorId: string | null; voters: string[] }[]
-      /** Points gagnés pendant la manche */
-      gained: Record<string, number>
+      /** La vraie définition, révélée seulement maintenant */
+      truth: string
+      definitions: { id: string; text: string; authorId: string }[]
     })
-  | (DicoRound & { phase: 'scores'; scores: Record<string, number>; gained: Record<string, number> })
-  | (DicoRound & { phase: 'final'; scores: Record<string, number>; losers: string[] })
 
 export type GameView = SusceptibleView | QuizView | ConfessionsView | FastestView | DicoView
 
@@ -300,9 +291,8 @@ export interface ClientToServer {
   'confession:write': (p: { text: string }, ack: Ack) => void
   'confession:guess': (p: { author: string }, ack: Ack) => void
   /** Durée mesurée par le téléphone, ou early: true pour un appui avant le bouton */
-  /** Erreur (ack) si la définition est vide, trop longue, ou identique à une autre */
+  /** Erreur (ack) si la définition est vide, trop longue, ou identique à celle d'un autre */
   'dico:submit': (p: { text: string }, ack: Ack) => void
-  'dico:vote': (p: { definitionId: string }, ack: Ack) => void
   'fastest:tap': (p: { roundId: string; reactionMs?: number; early?: boolean }, ack: Ack) => void
   'photo:start': (p: { target: string }, ack: Ack) => void
   'photo:finish': (ack: Ack) => void

@@ -39,10 +39,9 @@ const nextLabel = computed(() => {
   if (!g) return null
   if (g.id === 'fastest') return g.phase === 'results' ? 'Manche suivante' : null
   if (g.id === 'dico') {
-    if (g.phase === 'writing' || g.phase === 'voting') return 'Passer à la suite'
-    if (g.phase === 'reveal')
-      return g.round >= g.rounds ? 'Voir les résultats' : 'Voir le classement'
-    if (g.phase === 'scores') return 'Manche suivante'
+    if (g.phase === 'writing') return 'Passer à la suite'
+    if (g.phase === 'debate') return 'Révéler la vraie définition'
+    if (g.phase === 'reveal') return 'Mot suivant'
     return null
   }
   if (g.phase === 'reveal') {
@@ -57,7 +56,7 @@ const nextLabel = computed(() => {
   return null
 })
 const waitingForHost = computed(() =>
-  ['reveal', 'results', 'scores', 'final'].includes(game.value?.phase ?? ''),
+  ['reveal', 'results', 'debate', 'final'].includes(game.value?.phase ?? ''),
 )
 /** Libellé du bouton d'arrêt : Le plus rapide passe d'abord par le compteur de défaites */
 const stopLabel = computed(() => {
@@ -142,7 +141,7 @@ async function leave() {
             type="button"
             class="btn"
             :class="
-              ['reveal', 'results', 'scores'].includes(game.phase) ? 'btn--big' : 'btn--ghost'
+              ['reveal', 'results', 'debate'].includes(game.phase) ? 'btn--big' : 'btn--ghost'
             "
             @click="run(() => room.nextStep())"
           >
