@@ -10,6 +10,7 @@ import {
   type Category,
 } from '@/lib/protocol'
 import { playerKey, readItem, writeItem } from '@/lib/storage'
+import { serverUrl } from '@/lib/server'
 
 /** Dernier salon rejoint : à la réouverture de l'appli, on se reconnecte pour le retrouver */
 const LAST_ROOM_KEY = playerKey('mini-jeux:last-room')
@@ -41,8 +42,20 @@ export const useRoomStore = defineStore('room', () => {
   const isHost = computed(() => me.value?.isHost ?? false)
   const lastRoom = () => readItem(LAST_ROOM_KEY)
 
+  /** Les adresses des images viennent du serveur : complètes si le serveur est ailleurs */
+  function withServerUrls(v: RoomView): RoomView {
+    return {
+      ...v,
+      players: v.players.map((p) => ({ ...p, avatarUrl: p.avatarUrl && serverUrl(p.avatarUrl) })),
+      photo: v.photo && {
+        ...v.photo,
+        photos: v.photo.photos.map((photo) => ({ ...photo, url: serverUrl(photo.url) })),
+      },
+    }
+  }
+
   function setView(next: RoomView | null) {
-    view.value = next
+    view.value = next && withServerUrls(next)
     if (next) {
       lostRoom.value = null
       clockOffset.value = next.serverNow - Date.now()
@@ -115,10 +128,8 @@ export const useRoomStore = defineStore('room', () => {
 
   // ---------- Jeux ----------
 
-  const startGame = (
-    game: GameId,
-    options: { rounds?: number; category?: Category } = {},
-  ) => call((ack) => socket.emit('game:start', { game, ...options }, ack))
+  const startGame = (game: GameId, options: { rounds?: number; category?: Category } = {}) =>
+    call((ack) => socket.emit('game:start', { game, ...options }, ack))
   const nextStep = () => call((ack) => socket.emit('game:next', ack))
   const stopGame = () => call((ack) => socket.emit('game:stop', ack))
   const vote = (target: string) => call((ack) => socket.emit('vote:cast', { target }, ack))
@@ -144,7 +155,7 @@ export const useRoomStore = defineStore('room', () => {
     code = view.value?.code,
   ) {
     if (!code) throw new Error("Tu n'es dans aucun salon.")
-    const res = await fetch(`/rooms/${code}/${path}`, {
+    const res = await fetch(serverUrl(`/rooms/${code}/${path}`), {
       method,
       headers: { [PLAYER_HEADER]: getPlayerId(), ...(body && { 'Content-Type': 'image/jpeg' }) },
       body,

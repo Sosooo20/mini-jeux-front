@@ -1,6 +1,7 @@
 import { io, type Socket } from 'socket.io-client'
 import type { ClientToServer, ServerToClient } from '@/lib/protocol'
 import { playerKey, readItem, writeItem } from '@/lib/storage'
+import { SERVER_URL } from '@/lib/server'
 
 const PLAYER_ID_KEY = playerKey('mini-jeux:player-id')
 
@@ -37,7 +38,9 @@ let socket: GameSocket | null = null
 
 export function useSocket(): GameSocket {
   if (!socket) {
-    socket = io({ auth: { playerId: getPlayerId() }, autoConnect: false })
+    // Sans adresse : même serveur que le front (développement, démo sur le réseau local)
+    const options = { auth: { playerId: getPlayerId() }, autoConnect: false }
+    socket = SERVER_URL ? io(SERVER_URL, options) : io(options)
   }
   return socket
 }
