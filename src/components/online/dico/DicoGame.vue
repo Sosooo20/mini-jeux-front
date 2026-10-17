@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DicoView } from '@/lib/protocol'
+import LevelBadge from '@/components/categories/LevelBadge.vue'
 import DicoWord from './DicoWord.vue'
 import DicoWriting from './DicoWriting.vue'
 import DicoVoting from './DicoVoting.vue'
@@ -10,7 +11,10 @@ defineProps<{ game: DicoView }>()
 </script>
 
 <template>
-  <p class="round label">Manche {{ game.round }}/{{ game.rounds }}</p>
+  <p class="round">
+    <span class="label">Manche {{ game.round }}/{{ game.rounds }}</span>
+    <LevelBadge :level="game.level" />
+  </p>
   <DicoWord v-if="game.phase === 'word'" :game="game" />
   <DicoWriting v-else-if="game.phase === 'writing'" :game="game" />
   <DicoVoting v-else-if="game.phase === 'voting'" :game="game" />
@@ -20,6 +24,9 @@ defineProps<{ game: DicoView }>()
 
 <style scoped>
 .round {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 </style>

@@ -34,10 +34,13 @@ export const DICO_MAX_ROUNDS = 10
 
 export type GameId = 'susceptible' | 'quiz' | 'confessions' | 'fastest' | 'dico'
 
-/** « Qui de nous… » : niveau d'une question, et catégorie choisie par l'hôte (mix = les deux) */
-export type SusceptibleLevel = 'soft' | 'spicy'
-export type SusceptibleCategory = SusceptibleLevel | 'mix'
-export const SUSCEPTIBLE_CATEGORIES: SusceptibleCategory[] = ['soft', 'spicy', 'mix']
+/**
+ * Jeux à questions (Qui de nous, Quiz, Dico) : niveau d'une question, et catégorie choisie
+ * par l'hôte au lancement (mix = les deux)
+ */
+export type Level = 'soft' | 'spicy'
+export type Category = Level | 'mix'
+export const CATEGORIES: Category[] = ['soft', 'spicy', 'mix']
 
 export interface PlayerView {
   /** Identifiant public (empreinte du jeton secret, qui lui n'est jamais envoyé) */
@@ -56,9 +59,9 @@ export type SusceptibleView =
   | {
       id: 'susceptible'
       phase: 'vote'
-      category: SusceptibleCategory
+      category: Category
       question: string
-      level: SusceptibleLevel
+      level: Level
       deadline: number
       /** Qui a déjà voté (pas pour qui) */
       voted: string[]
@@ -67,9 +70,9 @@ export type SusceptibleView =
   | {
       id: 'susceptible'
       phase: 'reveal'
-      category: SusceptibleCategory
+      category: Category
       question: string
-      level: SusceptibleLevel
+      level: Level
       /** votant -> désigné */
       votes: Record<string, string>
       /** Le ou les plus désignés : ils boivent */
@@ -85,6 +88,8 @@ export interface QuizRound {
   targetId: string
   question: string
   choices: string[]
+  category: Category
+  level: Level
 }
 
 export type QuizView =
@@ -210,6 +215,8 @@ interface DicoRound {
   round: number
   rounds: number
   word: string
+  category: Category
+  level: Level
 }
 
 export type DicoView =
@@ -283,7 +290,7 @@ export interface ClientToServer {
   'room:leave': (ack: Ack) => void
   'player:update': (p: { pseudo: string }, ack: Ack) => void
   'game:start': (
-    p: { game: GameId; rounds?: number; category?: SusceptibleCategory },
+    p: { game: GameId; rounds?: number; category?: Category },
     ack: Ack,
   ) => void
   'game:next': (ack: Ack) => void

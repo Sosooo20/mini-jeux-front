@@ -7,7 +7,7 @@ import {
   type GameId,
   type PlayerView,
   type RoomView,
-  type SusceptibleCategory,
+  type Category,
 } from '@/lib/protocol'
 import { playerKey, readItem, writeItem } from '@/lib/storage'
 
@@ -117,7 +117,7 @@ export const useRoomStore = defineStore('room', () => {
 
   const startGame = (
     game: GameId,
-    options: { rounds?: number; category?: SusceptibleCategory } = {},
+    options: { rounds?: number; category?: Category } = {},
   ) => call((ack) => socket.emit('game:start', { game, ...options }, ack))
   const nextStep = () => call((ack) => socket.emit('game:next', ack))
   const stopGame = () => call((ack) => socket.emit('game:stop', ack))

@@ -3,12 +3,16 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { GAMES, accentStyle } from '@/lib/games'
 import { POURRAIT_QUESTIONS } from '@/lib/data/pourrait'
+import { inCategory, type Category } from '@/lib/categories'
+import CategoryPicker from '@/components/categories/CategoryPicker.vue'
+import LevelBadge from '@/components/categories/LevelBadge.vue'
 import { useDeck } from '@/composables/useDeck'
 import { useWakeLock } from '@/composables/useWakeLock'
 
 const game = GAMES.pourrait
 
-const { current, next } = useDeck(POURRAIT_QUESTIONS)
+const category = ref<Category>('soft')
+const { current, next } = useDeck(() => inCategory(POURRAIT_QUESTIONS, category.value))
 
 /** Page d'accueil du jeu (règles), puis les questions les unes après les autres */
 const started = ref(false)
@@ -27,12 +31,14 @@ useWakeLock(started)
       </p>
       <p class="intro__rule">🍺 Le plus désigné boit</p>
       <p class="intro__small">Égalité : tous les ex æquo boivent — et on débat !</p>
+      <CategoryPicker v-model="category" label="Ambiance" class="intro__picker" />
     </section>
 
     <Transition v-else name="flip" mode="out-in">
-      <article :key="current" class="card prompt" aria-live="polite">
+      <article :key="current.text" class="card prompt" aria-live="polite">
         <span class="prompt__emoji" aria-hidden="true">👉</span>
-        <p class="prompt__text">{{ current }}</p>
+        <LevelBadge :level="current.level" class="prompt__badge" />
+        <p class="prompt__text">{{ current.text }}</p>
       </article>
     </Transition>
 
@@ -51,6 +57,14 @@ useWakeLock(started)
 </template>
 
 <style scoped>
+.intro__picker {
+  margin-top: 12px;
+}
+
+.prompt__badge {
+  align-self: flex-start;
+}
+
 .prompt {
   flex: 1;
   display: flex;

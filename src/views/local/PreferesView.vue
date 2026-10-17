@@ -3,12 +3,16 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { GAMES, accentStyle } from '@/lib/games'
 import { DILEMMAS } from '@/lib/data/preferes'
+import { inCategory, type Category } from '@/lib/categories'
+import CategoryPicker from '@/components/categories/CategoryPicker.vue'
+import LevelBadge from '@/components/categories/LevelBadge.vue'
 import { useDeck } from '@/composables/useDeck'
 import { useWakeLock } from '@/composables/useWakeLock'
 
 const game = GAMES.preferes
 
-const { current, next } = useDeck(DILEMMAS)
+const category = ref<Category>('soft')
+const { current, next } = useDeck(() => inCategory(DILEMMAS, category.value))
 
 /** Page d'accueil du jeu (règles), puis les dilemmes les uns après les autres */
 const started = ref(false)
@@ -25,10 +29,12 @@ useWakeLock(started)
       <p>Deux choix s'affichent : chacun vote à main levée, en pointant 👈 ou 👉.</p>
       <p class="intro__rule">🍺 La minorité boit</p>
       <p class="intro__small">Égalité : tout le monde débat !</p>
+      <CategoryPicker v-model="category" label="Ambiance" class="intro__picker" />
     </section>
 
     <Transition v-else name="flip" mode="out-in">
       <section :key="current.a" class="dilemma" aria-live="polite">
+        <LevelBadge :level="current.level" class="dilemma__badge" />
         <div class="card choice choice--a">
           <span class="choice__side" aria-hidden="true">👈</span>
           <p>{{ current.a }}</p>
@@ -137,6 +143,14 @@ useWakeLock(started)
   font-weight: 700;
   font-size: 24px;
   color: var(--accent);
+}
+
+.intro__picker {
+  margin-top: 12px;
+}
+
+.dilemma__badge {
+  align-self: center;
 }
 
 .intro__small {

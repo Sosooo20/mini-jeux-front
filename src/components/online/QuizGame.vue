@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
+import LevelBadge from '@/components/categories/LevelBadge.vue'
 import DeadlineBar from '@/components/online/DeadlineBar.vue'
 import type { QuizView } from '@/lib/protocol'
 import { useRoomStore } from '@/stores/room'
@@ -60,6 +61,7 @@ async function answer(choice: number) {
     <section class="card question">
       <div class="question__head">
         <span class="label">Manche {{ game.round }}/{{ game.totalRounds }}</span>
+        <LevelBadge :level="game.level" />
         <span v-if="target" class="question__target">
           <PlayerAvatar :name="target.pseudo" :src="target.avatarUrl" :size="28" />
           {{ target.pseudo }}

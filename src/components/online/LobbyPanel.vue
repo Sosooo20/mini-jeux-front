@@ -9,11 +9,10 @@ import {
   DICO_MAX_ROUNDS,
   DICO_MIN_PLAYERS,
   MAX_PLAYERS,
-  SUSCEPTIBLE_CATEGORIES,
   type GameId,
-  type SusceptibleCategory,
+  type Category,
 } from '@/lib/protocol'
-import { CATEGORY_LABEL } from '@/lib/susceptible'
+import CategoryPicker from '@/components/categories/CategoryPicker.vue'
 import { useRoomStore } from '@/stores/room'
 
 const room = useRoomStore()
@@ -23,7 +22,7 @@ const view = computed(() => room.view!)
 const onlineCount = computed(() => view.value.players.filter((p) => p.status === 'online').length)
 const rounds = ref(1)
 const dicoRounds = ref(DICO_DEFAULT_ROUNDS)
-const category = ref<SusceptibleCategory>('soft')
+const category = ref<Category>('soft')
 const shareInfo = ref<string | null>(null)
 const error = ref<string | null>(null)
 
@@ -53,8 +52,11 @@ async function share() {
 async function start(game: GameId) {
   error.value = null
   try {
-    if (game === 'quiz') await room.startGame(game, { rounds: rounds.value })
-    else if (game === 'dico') await room.startGame(game, { rounds: dicoRounds.value })
+    // L'ambiance choisie vaut pour tous les jeux à questions
+    if (game === 'quiz')
+      await room.startGame(game, { rounds: rounds.value, category: category.value })
+    else if (game === 'dico')
+      await room.startGame(game, { rounds: dicoRounds.value, category: category.value })
     else if (game === 'susceptible') await room.startGame(game, { category: category.value })
     else await room.startGame(game)
   } catch (e) {
@@ -98,24 +100,15 @@ async function start(game: GameId) {
       <p v-if="onlineCount < 2" class="help">
         Il faut au moins 2 joueurs connectés pour lancer un jeu.
       </p>
+      <CategoryPicker
+        v-model="category"
+        class="ambiance"
+        label="Ambiance des questions (Qui de nous, Quiz, Dico)"
+      />
       <div class="game-row">
         <div>
           <strong>Qui est le plus susceptible de… ?</strong>
           <small>Tout le monde vote, le plus désigné boit.</small>
-          <div class="categories" role="radiogroup" aria-label="Catégorie des questions">
-            <button
-              v-for="c in SUSCEPTIBLE_CATEGORIES"
-              :key="c"
-              type="button"
-              role="radio"
-              class="category"
-              :class="{ 'is-selected': category === c }"
-              :aria-checked="category === c"
-              @click="category = c"
-            >
-              {{ CATEGORY_LABEL[c] }}
-            </button>
-          </div>
         </div>
         <button type="button" class="btn" :disabled="onlineCount < 2" @click="start('susceptible')">
           Lancer
@@ -335,30 +328,9 @@ ul {
   width: auto;
 }
 
-.categories {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.category {
-  min-height: 36px;
-  padding: 0 12px;
-  border: 2px solid transparent;
-  border-radius: 9999px;
-  background: var(--surface-3);
-  color: var(--text);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.category.is-selected {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 22%, var(--surface-3));
+.ambiance {
+  padding: 4px 4px 8px;
+  text-align: center;
 }
 
 .rounds {
